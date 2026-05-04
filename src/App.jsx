@@ -1,34 +1,56 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
 import MessageDetail from './pages/MessageDetail';
 import AddMessage from './pages/AddMessage';
 import Bible from './pages/Bible';
+import Login from './pages/Login';
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return null; // Or a loading spinner
+  if (!user) return <Navigate to="/login" replace />;
+  
+  return children;
+};
 
 function App() {
   return (
-    <Router>
-      <div className="app-layout">
-        <Navbar />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/messages/:id" element={<MessageDetail />} />
-            <Route path="/messages/add" element={<AddMessage />} />
-            <Route path="/bible" element={<Bible />} />
-          </Routes>
-        </main>
-        <footer style={styles.footer}>
-          <div className="container" style={styles.footerContent}>
-            <p>© {new Date().getFullYear()} Cabanatuan Community of Faith Baptist Church</p>
-            <p style={styles.footerSubtitle}>Review, remember, and reflect on the Word of God.</p>
-          </div>
-        </footer>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="app-layout">
+          <Navbar />
+          <main>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/messages/:id" element={<MessageDetail />} />
+              <Route path="/bible" element={<Bible />} />
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/messages/add" 
+                element={
+                  <ProtectedRoute>
+                    <AddMessage />
+                  </ProtectedRoute>
+                } 
+              />
+            </Routes>
+          </main>
+          <footer style={styles.footer}>
+            <div className="container" style={styles.footerContent}>
+              <p>© {new Date().getFullYear()} Cabanatuan Community of Faith Baptist Church</p>
+              <p style={styles.footerSubtitle}>Review, remember, and reflect on the Word of God.</p>
+            </div>
+          </footer>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

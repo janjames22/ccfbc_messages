@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import LogoHeader from './LogoHeader';
-import { Home, BookOpen, Library, PlusCircle, Menu, X } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Home, BookOpen, Library, PlusCircle, Menu, X, LogOut, LogIn } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navLinks = [
@@ -15,6 +18,12 @@ const Navbar = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    closeMenu();
+    navigate('/');
+  };
 
   return (
     <nav style={styles.nav}>
@@ -44,17 +53,42 @@ const Navbar = () => {
               </Link>
             </li>
           ))}
-          <li className={isMenuOpen ? 'nav-item-mobile' : ''}>
-            <Link 
-              to="/messages/add" 
-              onClick={closeMenu}
-              className="btn-large"
-              style={styles.addButton}
-            >
-              <PlusCircle size={28} />
-              <span>Add Message</span>
-            </Link>
-          </li>
+          
+          {user ? (
+            <>
+              <li className={isMenuOpen ? 'nav-item-mobile' : ''}>
+                <Link 
+                  to="/messages/add" 
+                  onClick={closeMenu}
+                  className="btn-large"
+                  style={styles.addButton}
+                >
+                  <PlusCircle size={28} />
+                  <span>Add Message</span>
+                </Link>
+              </li>
+              <li className={isMenuOpen ? 'nav-item-mobile' : ''}>
+                <button 
+                  onClick={handleSignOut}
+                  style={styles.logoutBtn}
+                >
+                  <LogOut size={28} />
+                  <span>Logout</span>
+                </button>
+              </li>
+            </>
+          ) : (
+            <li className={isMenuOpen ? 'nav-item-mobile' : ''}>
+              <Link 
+                to="/login" 
+                onClick={closeMenu}
+                style={styles.loginLink}
+              >
+                <LogIn size={24} />
+                <span>Admin</span>
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </nav>
@@ -105,6 +139,15 @@ const styles = {
     padding: '0.5rem',
     transition: 'var(--transition)',
   },
+  loginLink: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontWeight: '600',
+    fontSize: '1rem',
+    color: 'var(--muted)',
+    transition: 'var(--transition)',
+  },
   addButton: {
     display: 'flex',
     alignItems: 'center',
@@ -115,6 +158,16 @@ const styles = {
     padding: '0.75rem 1.5rem',
     boxShadow: '0 4px 12px rgba(15, 95, 168, 0.3)',
   },
+  logoutBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    color: '#ff4d4d',
+    fontWeight: '700',
+    fontSize: '1.1rem',
+    padding: '0.5rem',
+    transition: 'var(--transition)',
+  }
 };
 
 export default Navbar;
