@@ -5,8 +5,8 @@ const LogoHeader = ({ size = 'medium', className = '' }) => {
   const sizes = {
     small: '32px',
     navbar: '48px',
-    medium: '120px',
-    large: '160px'
+    medium: 'clamp(80px, 20vw, 120px)',
+    large: 'clamp(120px, 30vw, 160px)'
   };
 
   const pixelSize = sizes[size] || size;
@@ -15,7 +15,7 @@ const LogoHeader = ({ size = 'medium', className = '' }) => {
     <div className={`logo-container ${className}`}>
       <img 
         src={logo} 
-        alt="CCFBC Logo" 
+        alt="Cabanatuan Community of Faith Baptist Church Logo" 
         style={{ width: pixelSize, height: 'auto', objectFit: 'contain' }}
         className="logo-glow"
       />

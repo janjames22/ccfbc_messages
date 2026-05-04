@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 const SearchBar = ({ value, onChange, placeholder = 'Search messages...' }) => {
   return (
     <div style={styles.container}>
-      <Search size={20} color="var(--muted)" style={styles.icon} />
+      <Search size={24} color="var(--muted)" style={styles.icon} />
       <input 
         type="text" 
         value={value} 
@@ -20,7 +20,7 @@ const styles = {
   container: {
     position: 'relative',
     width: '100%',
-    maxWidth: '500px',
+    maxWidth: '600px',
   },
   icon: {
     position: 'absolute',
@@ -32,13 +32,15 @@ const styles = {
   input: {
     width: '100%',
     background: 'rgba(11, 31, 54, 0.6)',
-    border: '1px solid var(--border)',
-    borderRadius: '16px',
-    padding: '1rem 1rem 1rem 3.5rem',
+    border: '2px solid var(--border)',
+    borderRadius: '20px',
+    padding: '1.25rem 1.25rem 1.25rem 3.5rem',
     color: 'white',
-    fontSize: '1rem',
+    fontSize: '1.1rem',
+    fontWeight: '600',
     outline: 'none',
     transition: 'var(--transition)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
   },
 };
 

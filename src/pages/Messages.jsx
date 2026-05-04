@@ -4,42 +4,42 @@ import SectionTitle from '../components/SectionTitle';
 import MessageCard from '../components/MessageCard';
 import SearchBar from '../components/SearchBar';
 import { supabase } from '../lib/supabaseClient';
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [categories, setCategories] = useState(['All']);
 
   useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .order('service_date', { ascending: false });
+
+        if (error) throw error;
+        setMessages(data || []);
+        
+        const cats = ['All', ...new Set(data.map(m => m.category).filter(Boolean))];
+        setCategories(cats);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchMessages();
   }, []);
 
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .order('service_date', { ascending: false });
-
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const categories = ['All', ...new Set(messages.map(m => m.category).filter(Boolean))];
-
   const filteredMessages = messages.filter(m => {
-    const matchesSearch = m.title.toLowerCase().includes(search.toLowerCase()) || 
-                         m.speaker.toLowerCase().includes(search.toLowerCase()) ||
-                         m.summary?.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category === 'All' || m.category === category;
+    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         m.speaker.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || m.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -47,28 +47,37 @@ const Messages = () => {
     <PageContainer>
       <SectionTitle 
         title="Message Archive" 
-        subtitle="Search and browse through all our Sunday messages." 
+        subtitle="Explore our collection of Sunday worship messages and study notes." 
       />
 
-      <div style={styles.filterBar}>
-        <SearchBar value={search} onChange={setSearch} />
+      <div style={styles.controls}>
+        <SearchBar value={searchTerm} onChange={setSearchTerm} />
         
-        <div style={styles.categorySelect}>
-          <Filter size={18} color="var(--muted)" />
-          <select 
-            value={category} 
-            onChange={(e) => setCategory(e.target.value)}
-            style={styles.select}
-          >
+        <div style={styles.filterSection}>
+          <div style={styles.filterHeader}>
+            <Filter size={20} color="var(--light-blue)" />
+            <span style={styles.filterLabel}>Filter by Category:</span>
+          </div>
+          <div style={styles.categoryList}>
             {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
+              <button 
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                style={{
+                  ...styles.categoryBtn,
+                  background: selectedCategory === cat ? 'var(--primary-blue)' : 'rgba(255,255,255,0.05)',
+                  borderColor: selectedCategory === cat ? 'var(--light-blue)' : 'var(--border)',
+                }}
+              >
+                {cat}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={styles.loading}>Loading archive...</div>
+        <div style={styles.loading}>Loading messages...</div>
       ) : filteredMessages.length > 0 ? (
         <div style={styles.grid}>
           {filteredMessages.map(message => (
@@ -76,9 +85,12 @@ const Messages = () => {
           ))}
         </div>
       ) : (
-        <div style={styles.noResults}>
-          <h3>No messages found</h3>
-          <p>Try adjusting your search or category filter.</p>
+        <div style={styles.empty}>
+          <X size={48} color="var(--muted)" />
+          <p>No messages found matching your criteria.</p>
+          <button onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }} className="btn-large" style={styles.resetBtn}>
+            Clear Filters
+          </button>
         </div>
       )}
     </PageContainer>
@@ -86,49 +98,70 @@ const Messages = () => {
 };
 
 const styles = {
-  filterBar: {
+  controls: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '2rem',
-    marginBottom: '3rem',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
+    gap: '2.5rem',
+    marginBottom: '4rem',
   },
-  categorySelect: {
+  filterSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.25rem',
+  },
+  filterHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    background: 'rgba(11, 31, 54, 0.6)',
-    border: '1px solid var(--border)',
-    borderRadius: '16px',
-    padding: '0 1.25rem',
-    height: '52px',
   },
-  select: {
-    background: 'transparent',
-    border: 'none',
+  filterLabel: {
+    fontSize: '1rem',
+    fontWeight: '800',
+    color: 'var(--text-soft)',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+  },
+  categoryList: {
+    display: 'flex',
+    gap: '0.75rem',
+    flexWrap: 'wrap',
+  },
+  categoryBtn: {
+    padding: '0.75rem 1.5rem',
+    borderRadius: '100px',
+    fontSize: '1rem',
+    fontWeight: '700',
     color: 'white',
-    fontSize: '0.95rem',
-    fontWeight: '600',
-    outline: 'none',
-    cursor: 'pointer',
-    padding: '0 0.5rem',
+    border: '1px solid transparent',
+    transition: 'var(--transition)',
+    minHeight: '48px',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(280px, 100%, 350px), 1fr))',
+    gap: '2rem',
   },
   loading: {
     textAlign: 'center',
     padding: '5rem',
     color: 'var(--muted)',
-    fontSize: '1.2rem',
+    fontSize: '1.5rem',
   },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-    gap: '2rem',
-  },
-  noResults: {
+  empty: {
     textAlign: 'center',
     padding: '5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1.5rem',
     color: 'var(--muted)',
+    fontSize: '1.2rem',
+  },
+  resetBtn: {
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: 'white',
+    border: '1px solid var(--border)',
+    marginTop: '1rem',
   }
 };
 

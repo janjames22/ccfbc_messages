@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
-import LatestMessageCard from '../components/LatestMessageCard';
-import SectionTitle from '../components/SectionTitle';
 import LogoHeader from '../components/LogoHeader';
+import LatestMessageCard from '../components/LatestMessageCard';
 import { supabase } from '../lib/supabaseClient';
 import { Library, BookOpen, PlusCircle, ArrowRight } from 'lucide-react';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [latestMessage, setLatestMessage] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,11 +18,12 @@ const Home = () => {
           .from('messages')
           .select('*')
           .order('service_date', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
 
         if (error) throw error;
-        setLatestMessage(data);
+        if (data && data.length > 0) {
+          setLatestMessage(data[0]);
+        }
       } catch (error) {
         console.error('Error fetching latest message:', error);
       } finally {
@@ -39,44 +40,37 @@ const Home = () => {
         <LogoHeader size="large" className="logo-glow" />
         <h1 style={styles.title}>Cabanatuan Community of Faith Baptist Church</h1>
         <p style={styles.subtitle}>Review, remember, and reflect on the Word of God shared every week.</p>
+        
+        <div style={styles.ctaGrid}>
+          <button onClick={() => navigate('/messages')} className="btn-large" style={styles.primaryBtn}>
+            <Library size={24} /> Browse Messages
+          </button>
+          <button onClick={() => navigate('/bible')} className="btn-large" style={styles.secondaryBtn}>
+            <BookOpen size={24} /> Open Bible
+          </button>
+        </div>
       </div>
 
-      <div style={styles.content}>
-        <SectionTitle title="Featured Message" subtitle="Catch up on the latest word shared with our community." />
+      <div style={styles.section}>
+        <div style={styles.sectionHeader}>
+          <h2 style={styles.sectionTitle}>Latest Message</h2>
+          <Link to="/messages" style={styles.viewAll}>
+            View All <ArrowRight size={20} />
+          </Link>
+        </div>
         
         {loading ? (
           <div style={styles.loading}>Loading latest message...</div>
         ) : latestMessage ? (
           <LatestMessageCard message={latestMessage} />
         ) : (
-          <div className="card" style={styles.noData}>
-            <p>No messages found in the archive yet.</p>
-            <Link to="/messages/add" style={styles.noDataLink}>Add the first message</Link>
+          <div className="card" style={styles.emptyState}>
+            <p>No messages found. Be the first to add one!</p>
+            <Link to="/messages/add" style={styles.addFirst}>
+              <PlusCircle size={24} /> Add Message
+            </Link>
           </div>
         )}
-
-        <div style={styles.quickLinks}>
-          <Link to="/messages" style={styles.linkCard} className="card">
-            <Library size={32} color="var(--accent-blue)" />
-            <h3>Browse Archive</h3>
-            <p>Explore all previous Sunday messages by date or topic.</p>
-            <span style={styles.linkAction}>View All <ArrowRight size={16} /></span>
-          </Link>
-
-          <Link to="/bible" style={styles.linkCard} className="card">
-            <BookOpen size={32} color="var(--accent-blue)" />
-            <h3>Bible Access</h3>
-            <p>Quickly search and read scripture references online.</p>
-            <span style={styles.linkAction}>Open Bible <ArrowRight size={16} /></span>
-          </Link>
-
-          <Link to="/messages/add" style={styles.linkCard} className="card">
-            <PlusCircle size={32} color="var(--accent-blue)" />
-            <h3>Add New</h3>
-            <p>Contribution area for message notes and summaries.</p>
-            <span style={styles.linkAction}>Add Message <ArrowRight size={16} /></span>
-          </Link>
-        </div>
       </div>
     </PageContainer>
   );
@@ -85,63 +79,97 @@ const Home = () => {
 const styles = {
   hero: {
     textAlign: 'center',
-    marginBottom: '5rem',
+    padding: '4rem 0',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1.5rem',
   },
   title: {
-    fontSize: '3.5rem',
+    maxWidth: '900px',
+    fontSize: 'clamp(1.5rem, 5vw, 3.5rem)',
     fontWeight: '900',
-    color: 'white',
-    marginTop: '2rem',
-    marginBottom: '1rem',
+    lineHeight: '1.1',
+    margin: '1rem 0',
   },
   subtitle: {
-    fontSize: '1.25rem',
+    fontSize: 'clamp(1rem, 3vw, 1.35rem)',
     color: 'var(--text-soft)',
-    maxWidth: '600px',
-    margin: '0 auto',
+    maxWidth: '700px',
+    lineHeight: '1.6',
   },
-  content: {
-    maxWidth: '1000px',
-    margin: '0 auto',
+  ctaGrid: {
+    display: 'flex',
+    gap: '1rem',
+    marginTop: '2rem',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  primaryBtn: {
+    background: 'var(--primary-blue)',
+    color: 'white',
+    flex: '1',
+    minWidth: '250px',
+    maxWidth: '350px',
+    boxShadow: '0 8px 24px rgba(15, 95, 168, 0.4)',
+  },
+  secondaryBtn: {
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: 'white',
+    border: '1px solid var(--border)',
+    flex: '1',
+    minWidth: '250px',
+    maxWidth: '350px',
+  },
+  section: {
+    marginTop: '4rem',
+    marginBottom: '4rem',
+  },
+  sectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '2rem',
+    flexWrap: 'wrap',
+    gap: '1rem',
+  },
+  sectionTitle: {
+    fontSize: '2rem',
+    fontWeight: '800',
+    margin: 0,
+  },
+  viewAll: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    fontWeight: '700',
+    color: 'var(--light-blue)',
+    fontSize: '1.1rem',
   },
   loading: {
     textAlign: 'center',
     padding: '4rem',
     color: 'var(--muted)',
-    fontSize: '1.2rem',
   },
-  noData: {
+  emptyState: {
+    padding: '4rem',
     textAlign: 'center',
-    padding: '3rem',
-  },
-  noDataLink: {
-    display: 'inline-block',
-    marginTop: '1rem',
-    color: 'var(--accent-blue)',
-    fontWeight: '600',
-  },
-  quickLinks: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '2rem',
-    marginTop: '4rem',
-  },
-  linkCard: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    padding: '2rem',
-    textDecoration: 'none',
-    transition: 'var(--transition)',
+    alignItems: 'center',
+    gap: '1.5rem',
   },
-  linkAction: {
-    marginTop: 'auto',
+  addFirst: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
-    color: 'var(--accent-blue)',
+    gap: '0.75rem',
+    background: 'var(--primary-blue)',
+    color: 'white',
+    padding: '1rem 2rem',
+    borderRadius: '16px',
     fontWeight: '700',
-    fontSize: '0.9rem',
+    textDecoration: 'none',
   }
 };
 

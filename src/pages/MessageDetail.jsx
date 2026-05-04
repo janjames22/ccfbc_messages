@@ -44,52 +44,57 @@ const MessageDetail = () => {
     <PageContainer>
       <div style={styles.topBar}>
         <Link to="/messages" style={styles.backLink}>
-          <ArrowLeft size={18} /> Back to Archive
+          <ArrowLeft size={24} /> <span>Back to Archive</span>
         </Link>
-        <BibleVersionSelect 
-          value={selectedVersion} 
-          onChange={setSelectedVersion}
-          label="Reading Version"
-        />
+        <div style={styles.versionPicker}>
+          <BibleVersionSelect 
+            value={selectedVersion} 
+            onChange={setSelectedVersion}
+            label="Reading Version"
+          />
+        </div>
       </div>
 
-      <div style={styles.header}>
+      <header style={styles.header}>
         <div style={styles.meta}>
           <span style={styles.category}>{message.category}</span>
           <div style={styles.metaRow}>
             <div style={styles.metaItem}>
-              <Calendar size={18} color="var(--accent-blue)" />
+              <Calendar size={20} color="var(--accent-blue)" />
               <span>{new Date(message.service_date).toLocaleDateString(undefined, { dateStyle: 'full' })}</span>
             </div>
             <div style={styles.metaItem}>
-              <User size={18} color="var(--accent-blue)" />
+              <User size={20} color="var(--accent-blue)" />
               <span>{message.speaker}</span>
             </div>
           </div>
         </div>
         <h1 style={styles.title}>{message.title}</h1>
-      </div>
+      </header>
 
-      <div style={styles.contentGrid}>
+      <div className="message-content-layout" style={styles.contentGrid}>
         <div style={styles.mainContent}>
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
-              <BookOpen size={24} color="var(--accent-blue)" />
+              <BookOpen size={28} color="var(--accent-blue)" />
               <h2>Main Bible Verse</h2>
             </div>
             <VerseBox 
               reference={message.main_verse_reference} 
               text={message.main_verse_text} 
             />
-            <BibleLinkButton 
-              reference={message.main_verse_reference} 
-              version={selectedVersion}
-            />
+            <div style={styles.actionRow}>
+              <BibleLinkButton 
+                reference={message.main_verse_reference} 
+                version={selectedVersion}
+                className="btn-full"
+              />
+            </div>
           </section>
 
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
-              <Bookmark size={24} color="var(--accent-blue)" />
+              <Bookmark size={28} color="var(--accent-blue)" />
               <h2>Summary</h2>
             </div>
             <div className="card" style={styles.summaryCard}>
@@ -100,14 +105,14 @@ const MessageDetail = () => {
           {message.key_points && message.key_points.length > 0 && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <Bookmark size={24} color="var(--accent-blue)" />
+                <Bookmark size={28} color="var(--accent-blue)" />
                 <h2>Key Points</h2>
               </div>
               <ul style={styles.pointsList}>
                 {message.key_points.map((point, index) => (
                   <li key={index} className="card" style={styles.pointItem}>
                     <span style={styles.pointNumber}>{index + 1}</span>
-                    <p>{point}</p>
+                    <p style={styles.pointText}>{point}</p>
                   </li>
                 ))}
               </ul>
@@ -117,12 +122,12 @@ const MessageDetail = () => {
           {message.full_notes && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <FileText size={24} color="var(--accent-blue)" />
+                <FileText size={28} color="var(--accent-blue)" />
                 <h2>Full Notes</h2>
               </div>
               <div className="card" style={styles.notesContainer}>
                 {message.full_notes.split('\n').map((para, i) => (
-                  <p key={i} style={{ marginBottom: para ? '1rem' : '0.5rem' }}>{para}</p>
+                  <p key={i} style={{ marginBottom: para ? '1.5rem' : '0.75rem' }}>{para}</p>
                 ))}
               </div>
             </section>
@@ -131,7 +136,7 @@ const MessageDetail = () => {
           {message.reflection_questions && message.reflection_questions.length > 0 && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <HelpCircle size={24} color="var(--accent-blue)" />
+                <HelpCircle size={28} color="var(--accent-blue)" />
                 <h2>Reflection Questions</h2>
               </div>
               <div className="card" style={styles.questionsCard}>
@@ -148,7 +153,7 @@ const MessageDetail = () => {
           )}
         </div>
 
-        <aside style={styles.sidebar}>
+        <aside className="message-sidebar" style={styles.sidebar}>
           {message.related_verses && message.related_verses.length > 0 && (
             <div className="card" style={styles.sidebarCard}>
               <h3 style={styles.sidebarTitle}>Related Verses</h3>
@@ -158,11 +163,13 @@ const MessageDetail = () => {
                     <p style={styles.relatedRef}>{v.reference}</p>
                     <p style={styles.relatedText}>"{v.text}"</p>
                     {v.note && <p style={styles.relatedNote}>{v.note}</p>}
-                    <BibleLinkButton 
-                      reference={v.reference} 
-                      version={selectedVersion}
-                      label="Read Verse" 
-                    />
+                    <div style={styles.actionRow}>
+                      <BibleLinkButton 
+                        reference={v.reference} 
+                        version={selectedVersion}
+                        label="Read Verse" 
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -175,72 +182,91 @@ const MessageDetail = () => {
 };
 
 const styles = {
-  loading: { textAlign: 'center', padding: '5rem', color: 'var(--muted)' },
-  error: { textAlign: 'center', padding: '5rem', color: 'var(--accent-blue)' },
+  loading: { textAlign: 'center', padding: '5rem', color: 'var(--muted)', fontSize: '1.5rem' },
+  error: { textAlign: 'center', padding: '5rem', color: 'var(--accent-blue)', fontSize: '1.5rem' },
   topBar: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '2rem',
+    alignItems: 'center',
+    marginBottom: '2.5rem',
     flexWrap: 'wrap',
-    gap: '1rem',
+    gap: '1.5rem',
   },
   backLink: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.75rem',
     color: 'var(--muted)',
-    fontWeight: '600',
-    paddingTop: '0.5rem',
+    fontWeight: '800',
+    fontSize: '1.1rem',
   },
-  header: { marginBottom: '3rem' },
+  versionPicker: {
+    flexShrink: 0,
+    width: '100%',
+    maxWidth: '300px',
+  },
+  header: { marginBottom: '4rem' },
   meta: { marginBottom: '1.5rem' },
   category: {
     background: 'rgba(30, 136, 229, 0.2)',
     color: 'var(--light-blue)',
-    padding: '0.4rem 1rem',
+    padding: '0.5rem 1.25rem',
     borderRadius: '100px',
-    fontSize: '0.85rem',
-    fontWeight: '700',
+    fontSize: '0.9rem',
+    fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: '1px',
     display: 'inline-block',
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
   },
   metaRow: { display: 'flex', gap: '2rem', flexWrap: 'wrap' },
-  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'var(--text-soft)' },
-  title: { fontSize: '3.5rem', fontWeight: '900', lineHeight: '1.1' },
-  contentGrid: { display: 'grid', gridTemplateColumns: '1fr 350px', gap: '3rem' },
-  section: { marginBottom: '4rem' },
-  sectionHeader: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' },
-  summaryCard: { padding: '2rem', fontSize: '1.1rem', color: 'var(--text-soft)' },
-  pointsList: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-  pointItem: { display: 'flex', gap: '1.5rem', padding: '1.5rem', alignItems: 'flex-start' },
+  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.2rem', color: 'var(--text-soft)', fontWeight: '600' },
+  title: { fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: '900', lineHeight: '1.1' },
+  contentGrid: { 
+    display: 'grid', 
+    gridTemplateColumns: '1fr', 
+    gap: '3rem',
+    // We'll use a CSS class for the desktop 2-column layout
+  },
+  mainContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+  section: { marginBottom: '5rem' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' },
+  summaryCard: { padding: '2.5rem', fontSize: '1.2rem', color: 'var(--text-soft)', lineHeight: '1.7' },
+  pointsList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
+  pointItem: { display: 'flex', gap: '1.5rem', padding: '2rem', alignItems: 'flex-start' },
   pointNumber: {
     background: 'var(--primary-blue)',
     color: 'white',
-    width: '32px',
-    height: '32px',
+    width: '40px',
+    height: '40px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontWeight: '800',
+    fontWeight: '900',
+    fontSize: '1.2rem',
     flexShrink: 0,
+    boxShadow: '0 4px 10px rgba(15, 95, 168, 0.3)',
   },
-  notesContainer: { padding: '2.5rem', fontSize: '1.05rem', color: 'var(--text-soft)', whiteSpace: 'pre-wrap' },
-  questionsCard: { padding: '2rem', background: 'rgba(11, 31, 54, 0.4)' },
-  questionsList: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
-  questionItem: { display: 'flex', gap: '1rem', alignItems: 'flex-start' },
-  bullet: { width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-blue)', marginTop: '0.6rem', flexShrink: 0 },
+  pointText: { fontSize: '1.25rem', fontWeight: '600', lineHeight: '1.5' },
+  notesContainer: { padding: 'clamp(1.5rem, 5vw, 3rem)', fontSize: '1.2rem', color: 'var(--text-soft)', lineHeight: '1.8' },
+  questionsCard: { padding: '2.5rem', background: 'rgba(11, 31, 54, 0.4)' },
+  questionsList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
+  questionItem: { display: 'flex', gap: '1.25rem', alignItems: 'flex-start' },
+  bullet: { width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-blue)', marginTop: '0.75rem', flexShrink: 0 },
   sidebar: {},
-  sidebarCard: { padding: '1.5rem' },
-  sidebarTitle: { marginBottom: '1.5rem', color: 'var(--light-blue)' },
-  relatedList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
-  relatedItem: { borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem' },
-  relatedRef: { fontWeight: '700', marginBottom: '0.5rem' },
-  relatedText: { fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--muted)', marginBottom: '0.75rem' },
-  relatedNote: { fontSize: '0.85rem', color: 'var(--light-blue)', marginBottom: '1rem' },
+  sidebarCard: { padding: '2rem' },
+  sidebarTitle: { fontSize: '1.5rem', fontWeight: '800', marginBottom: '2rem', color: 'var(--light-blue)', borderBottom: '2px solid var(--border)', paddingBottom: '0.75rem' },
+  relatedList: { display: 'flex', flexDirection: 'column', gap: '3rem' },
+  relatedItem: { paddingBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' },
+  relatedRef: { fontWeight: '800', fontSize: '1.25rem', marginBottom: '0.75rem', color: 'white' },
+  relatedText: { fontSize: '1.1rem', fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.25rem', lineHeight: '1.6' },
+  relatedNote: { fontSize: '1rem', color: 'var(--light-blue)', marginBottom: '1.5rem', background: 'rgba(142, 203, 255, 0.05)', padding: '1rem', borderRadius: '8px' },
+  actionRow: { marginTop: '1rem' },
 };
 
 export default MessageDetail;

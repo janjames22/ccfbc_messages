@@ -4,7 +4,7 @@ import { Quote } from 'lucide-react';
 const VerseBox = ({ reference, text }) => {
   return (
     <div style={styles.container}>
-      <Quote size={32} color="var(--accent-blue)" style={styles.icon} />
+      <Quote size={48} color="var(--accent-blue)" style={styles.icon} />
       <div style={styles.content}>
         <p style={styles.text}>"{text}"</p>
         <p style={styles.reference}>{reference}</p>
@@ -16,33 +16,34 @@ const VerseBox = ({ reference, text }) => {
 const styles = {
   container: {
     background: 'rgba(30, 136, 229, 0.08)',
-    borderLeft: '4px solid var(--accent-blue)',
-    padding: '2rem',
-    borderRadius: '0 16px 16px 0',
+    borderLeft: '6px solid var(--accent-blue)',
+    padding: 'clamp(1.5rem, 4vw, 2.5rem)',
+    borderRadius: '0 24px 24px 0',
     margin: '2rem 0',
     position: 'relative',
     overflow: 'hidden',
   },
   icon: {
     position: 'absolute',
-    top: '1rem',
-    left: '1rem',
-    opacity: 0.2,
+    top: '0.5rem',
+    left: '0.5rem',
+    opacity: 0.15,
   },
   content: {
     position: 'relative',
     zIndex: 1,
   },
   text: {
-    fontSize: '1.25rem',
+    fontSize: 'clamp(1.1rem, 3vw, 1.5rem)',
     fontStyle: 'italic',
     lineHeight: '1.7',
     color: 'var(--text)',
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
+    fontWeight: '500',
   },
   reference: {
-    fontSize: '1.1rem',
-    fontWeight: '700',
+    fontSize: '1.25rem',
+    fontWeight: '800',
     color: 'var(--light-blue)',
     textAlign: 'right',
   },
