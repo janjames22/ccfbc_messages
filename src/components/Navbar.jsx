@@ -17,7 +17,7 @@ const Navbar = () => {
       <div className="container" style={styles.container}>
         <Link to="/" style={styles.logoLink}>
           <LogoHeader size="navbar" />
-          <span style={styles.brandName}>CCFBC Archive</span>
+          <span style={styles.brandName}>CCFBC Message Archive</span>
         </Link>
         
         <ul style={styles.navList}>

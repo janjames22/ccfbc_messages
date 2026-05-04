@@ -23,8 +23,8 @@ function App() {
         </main>
         <footer style={styles.footer}>
           <div className="container" style={styles.footerContent}>
-            <p>© {new Date().getFullYear()} CCFBC Sunday Message Archive</p>
-            <p style={styles.footerSubtitle}>Review, remember, and reflect.</p>
+            <p>© {new Date().getFullYear()} Cabanatuan Community of Faith Baptist Church</p>
+            <p style={styles.footerSubtitle}>Review, remember, and reflect on the Word of God.</p>
           </div>
         </footer>
       </div>

@@ -37,7 +37,7 @@ const Home = () => {
     <PageContainer>
       <div style={styles.hero}>
         <LogoHeader size="large" className="logo-glow" />
-        <h1 style={styles.title}>CCFBC Sunday Message Archive</h1>
+        <h1 style={styles.title}>Cabanatuan Community of Faith Baptist Church</h1>
         <p style={styles.subtitle}>Review, remember, and reflect on the Word of God shared every week.</p>
       </div>
 
