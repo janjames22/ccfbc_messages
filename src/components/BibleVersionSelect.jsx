@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, ChevronDown } from 'lucide-react';
 
 export const BIBLE_VERSIONS = [
   { label: "English — ESV", value: "ESV" },
@@ -16,7 +16,7 @@ const BibleVersionSelect = ({ value, onChange, label = "Bible Version" }) => {
     <div style={styles.container}>
       {label && <label style={styles.label}>{label}</label>}
       <div style={styles.selectWrapper}>
-        <Globe size={18} color="var(--muted)" style={styles.icon} />
+        <Globe size={20} color="var(--accent-blue)" style={styles.icon} />
         <select 
           value={value} 
           onChange={(e) => onChange(e.target.value)}
@@ -28,6 +28,7 @@ const BibleVersionSelect = ({ value, onChange, label = "Bible Version" }) => {
             </option>
           ))}
         </select>
+        <ChevronDown size={20} color="var(--muted)" style={styles.chevron} />
       </div>
     </div>
   );
@@ -37,44 +38,53 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
-    minWidth: '200px',
+    gap: '0.6rem',
+    width: '100%',
   },
   label: {
-    fontSize: '0.85rem',
-    fontWeight: '700',
+    fontSize: '0.9rem',
+    fontWeight: '800',
     color: 'var(--light-blue)',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '1px',
+    paddingLeft: '0.25rem',
   },
   selectWrapper: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    background: 'rgba(11, 31, 54, 0.6)',
-    border: '1px solid var(--border)',
-    borderRadius: '12px',
+    background: 'rgba(5, 7, 13, 0.6)',
+    border: '2px solid var(--border)',
+    borderRadius: '16px',
     padding: '0 1rem',
-    height: '48px',
+    height: '56px',
     transition: 'var(--transition)',
   },
   icon: {
     marginRight: '0.75rem',
+    flexShrink: 0,
+  },
+  chevron: {
+    marginLeft: 'auto',
+    pointerEvents: 'none',
   },
   select: {
     background: 'transparent',
     border: 'none',
     color: 'white',
-    fontSize: '0.95rem',
-    fontWeight: '600',
+    fontSize: '1.1rem',
+    fontWeight: '700',
     width: '100%',
+    height: '100%',
     outline: 'none',
     cursor: 'pointer',
     appearance: 'none',
+    paddingRight: '2rem',
   },
   option: {
     background: 'var(--bg-navy)',
     color: 'white',
+    fontSize: '1rem',
   }
 };
 

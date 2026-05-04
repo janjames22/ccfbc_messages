@@ -79,7 +79,7 @@ const Home = () => {
 const styles = {
   hero: {
     textAlign: 'center',
-    padding: '4rem 0',
+    padding: 'clamp(2rem, 10vw, 4rem) 0',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -87,16 +87,18 @@ const styles = {
   },
   title: {
     maxWidth: '900px',
-    fontSize: 'clamp(1.5rem, 5vw, 3.5rem)',
+    fontSize: 'clamp(1.75rem, 6vw, 3.5rem)',
     fontWeight: '900',
     lineHeight: '1.1',
-    margin: '1rem 0',
+    margin: '0.5rem 0',
+    padding: '0 0.5rem',
   },
   subtitle: {
-    fontSize: 'clamp(1rem, 3vw, 1.35rem)',
+    fontSize: 'clamp(1rem, 3.5vw, 1.25rem)',
     color: 'var(--text-soft)',
-    maxWidth: '700px',
+    maxWidth: '600px',
     lineHeight: '1.6',
+    padding: '0 1rem',
   },
   ctaGrid: {
     display: 'flex',
@@ -105,13 +107,13 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'center',
     width: '100%',
+    padding: '0 1rem',
   },
   primaryBtn: {
     background: 'var(--primary-blue)',
     color: 'white',
     flex: '1',
-    minWidth: '250px',
-    maxWidth: '350px',
+    minWidth: 'min(100%, 280px)',
     boxShadow: '0 8px 24px rgba(15, 95, 168, 0.4)',
   },
   secondaryBtn: {
@@ -119,11 +121,10 @@ const styles = {
     color: 'white',
     border: '1px solid var(--border)',
     flex: '1',
-    minWidth: '250px',
-    maxWidth: '350px',
+    minWidth: 'min(100%, 280px)',
   },
   section: {
-    marginTop: '4rem',
+    marginTop: 'clamp(2rem, 8vw, 4rem)',
     marginBottom: '4rem',
   },
   sectionHeader: {
@@ -135,7 +136,7 @@ const styles = {
     gap: '1rem',
   },
   sectionTitle: {
-    fontSize: '2rem',
+    fontSize: 'clamp(1.5rem, 5vw, 2.25rem)',
     fontWeight: '800',
     margin: 0,
   },
@@ -145,7 +146,7 @@ const styles = {
     gap: '0.5rem',
     fontWeight: '700',
     color: 'var(--light-blue)',
-    fontSize: '1.1rem',
+    fontSize: '1rem',
   },
   loading: {
     textAlign: 'center',
@@ -153,7 +154,7 @@ const styles = {
     color: 'var(--muted)',
   },
   emptyState: {
-    padding: '4rem',
+    padding: '3rem 1.5rem',
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
