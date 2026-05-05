@@ -9,6 +9,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Mock supabase client to prevent crashes when environment variables are missing
 const mockSupabase = {
+  auth: {
+    getSession: () => Promise.resolve({ data: { session: null } }),
+    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    signInWithPassword: () => Promise.resolve({ data: null, error: new Error('Mock client') }),
+    signOut: () => Promise.resolve({ error: null }),
+  },
   from: () => ({
     select: () => ({
       order: () => ({

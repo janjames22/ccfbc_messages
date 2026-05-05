@@ -43,8 +43,9 @@ const Messages = () => {
 
   const filteredMessages = messages.filter(m => {
     // Search filter
-    const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         m.speaker.toLowerCase().includes(searchTerm.toLowerCase());
+    const titleMatch = (m.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const speakerMatch = (m.speaker || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = titleMatch || speakerMatch;
     
     // Category/Offline filter
     let matchesCategory = true;

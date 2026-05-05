@@ -13,6 +13,26 @@
     <meta name="apple-mobile-web-app-title" content="CCFBC" />
     <link rel="apple-touch-icon" href="/icon-192.jpg" />
     <meta name="theme-color" content="#1e88e5" />
+    <script>
+      window.addEventListener('error', async function(e) {
+        console.error('Global error caught:', e.error);
+        if ('serviceWorker' in navigator) {
+          try {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            let cleared = false;
+            for (let r of regs) { await r.unregister(); cleared = true; }
+            if (cleared) {
+              console.log('Cleared SW due to fatal error, reloading...');
+              sessionStorage.setItem('ccfbc_sw_cleared', 'true');
+              if (!sessionStorage.getItem('ccfbc_reloaded')) {
+                sessionStorage.setItem('ccfbc_reloaded', 'true');
+                window.location.reload(true);
+              }
+            }
+          } catch(err) {}
+        }
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

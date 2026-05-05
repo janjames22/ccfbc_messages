@@ -13,11 +13,38 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Automatically try to unregister service workers if we hit a fatal error
+    this.clearCachesAndWorkers();
   }
 
-  handleReset = () => {
+  clearCachesAndWorkers = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const key of keys) {
+          await caches.delete(key);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to clear caches/workers:', err);
+    }
+  };
+
+  handleReset = async () => {
+    await this.clearCachesAndWorkers();
     this.setState({ hasError: false, error: null });
     window.location.href = '/';
+  };
+
+  handleHardRefresh = async () => {
+    await this.clearCachesAndWorkers();
+    window.location.reload(true);
   };
 
   render() {
@@ -43,7 +70,7 @@ class ErrorBoundary extends React.Component {
 
             <div style={styles.actions}>
               <button 
-                onClick={() => window.location.reload()} 
+                onClick={this.handleHardRefresh} 
                 style={styles.primaryBtn}
               >
                 <RefreshCw size={24} />
