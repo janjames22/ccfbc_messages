@@ -1,13 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, User, ArrowRight, Bookmark } from 'lucide-react';
+import OfflineStatusBadge from './OfflineStatusBadge';
 
 const MessageCard = ({ message }) => {
   return (
     <div className="card-light" style={styles.card}>
       <div style={styles.content}>
         <div style={styles.metaRow}>
-          <span style={styles.category}>{message.category}</span>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span style={styles.category}>{message.category}</span>
+            <OfflineStatusBadge messageId={message.id} showLabel={false} />
+          </div>
           <div style={styles.dateRow}>
             <Calendar size={16} color="var(--primary-blue)" />
             <span>{new Date(message.service_date).toLocaleDateString()}</span>

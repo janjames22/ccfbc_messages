@@ -4,12 +4,15 @@ import PageContainer from '../components/PageContainer';
 import VerseBox from '../components/VerseBox';
 import BibleLinkButton from '../components/BibleLinkButton';
 import BibleVersionSelect from '../components/BibleVersionSelect';
+import DownloadOfflineButton from '../components/DownloadOfflineButton';
 import { supabase } from '../lib/supabaseClient';
-import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark, WifiOff } from 'lucide-react';
+import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark, WifiOff, Smartphone } from 'lucide-react';
 import { useOffline } from '../hooks/useOffline';
+import { useOfflineMessages } from '../hooks/useOfflineMessages';
 
 const MessageDetail = () => {
   const isOffline = useOffline();
+  const { isDownloaded } = useOfflineMessages();
   const { id } = useParams();
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +43,31 @@ const MessageDetail = () => {
   }, [id]);
 
   if (loading) return <PageContainer><div style={styles.loading}>Loading message details...</div></PageContainer>;
-  if (!message) return <PageContainer><div style={styles.error}>Message not found.</div></PageContainer>;
+  
+  if (!message) {
+    if (isOffline && !isDownloaded(id)) {
+      return (
+        <PageContainer>
+          <div style={styles.topBar}>
+            <Link to="/messages" style={styles.backLink}>
+              <ArrowLeft size={24} /> <span>Back to Archive</span>
+            </Link>
+          </div>
+          <div style={styles.offlineErrorContainer}>
+            <Smartphone size={80} color="var(--primary-blue)" style={{ opacity: 0.5, marginBottom: '2rem' }} />
+            <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: 'var(--text-dark)' }}>Message Not Downloaded</h2>
+            <p style={{ fontSize: '1.2rem', color: 'var(--muted-dark)', maxWidth: '500px', margin: '0 auto 2.5rem' }}>
+              This message is not downloaded yet. Please connect to the internet to view it.
+            </p>
+            <Link to="/messages" className="btn-large" style={{ background: 'var(--primary-blue)', color: 'white' }}>
+              View Saved Messages
+            </Link>
+          </div>
+        </PageContainer>
+      );
+    }
+    return <PageContainer><div style={styles.error}>Message not found.</div></PageContainer>;
+  }
 
   return (
     <PageContainer>
@@ -59,13 +86,16 @@ const MessageDetail = () => {
 
       <header style={styles.header}>
         <div style={styles.meta}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={styles.category}>{message.category}</span>
             {isOffline && (
               <span style={styles.offlineBadge}>
                 <WifiOff size={14} /> Offline Mode
               </span>
             )}
+            <div style={{ width: '100%', maxWidth: '300px', margin: '1rem 0' }}>
+              <DownloadOfflineButton messageId={message.id} title={message.title} />
+            </div>
           </div>
           <div style={styles.metaRow}>
             <div style={styles.metaItem}>
@@ -160,6 +190,10 @@ const MessageDetail = () => {
               </div>
             </section>
           )}
+
+          <div style={{ marginTop: '2rem', marginBottom: '4rem' }}>
+            <DownloadOfflineButton messageId={message.id} title={message.title} />
+          </div>
         </div>
 
         <aside className="message-sidebar" style={styles.sidebar}>
@@ -193,6 +227,14 @@ const MessageDetail = () => {
 const styles = {
   loading: { textAlign: 'center', padding: '5rem', color: 'var(--muted)', fontSize: '1.5rem' },
   error: { textAlign: 'center', padding: '5rem', color: 'var(--accent-blue)', fontSize: '1.5rem' },
+  offlineErrorContainer: {
+    textAlign: 'center',
+    padding: '5rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   topBar: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -218,7 +260,7 @@ const styles = {
   meta: { marginBottom: '1.5rem' },
   category: {
     background: 'rgba(30, 136, 229, 0.2)',
-    color: 'var(--light-blue)',
+    color: 'var(--primary-blue)',
     padding: '0.5rem 1.25rem',
     borderRadius: '100px',
     fontSize: '0.9rem',
@@ -226,11 +268,10 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '1px',
     display: 'inline-block',
-    marginBottom: '1.5rem',
   },
   offlineBadge: {
-    background: 'rgba(255, 255, 255, 0.05)',
-    color: 'var(--muted)',
+    background: 'rgba(5, 7, 13, 0.05)',
+    color: 'var(--muted-dark)',
     padding: '0.4rem 1rem',
     borderRadius: '100px',
     fontSize: '0.8rem',
@@ -238,17 +279,15 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.5rem',
-    border: '1px solid var(--border)',
-    marginBottom: '1.5rem',
+    border: '1px solid var(--border-light)',
   },
-  metaRow: { display: 'flex', gap: '2rem', flexWrap: 'wrap' },
-  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.2rem', color: 'var(--text-soft)', fontWeight: '600' },
-  title: { fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: '900', lineHeight: '1.1' },
+  metaRow: { display: 'flex', gap: '2rem', flexWrap: 'wrap', marginTop: '1.5rem' },
+  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.2rem', color: 'var(--text-dark)', fontWeight: '600' },
+  title: { fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: '900', lineHeight: '1.1', color: 'var(--text-dark)' },
   contentGrid: { 
     display: 'grid', 
     gridTemplateColumns: '1fr', 
     gap: '3rem',
-    // We'll use a CSS class for the desktop 2-column layout
   },
   mainContent: {
     display: 'flex',

@@ -6,6 +6,8 @@ import SearchBar from '../components/SearchBar';
 import { supabase } from '../lib/supabaseClient';
 import { Filter, X, WifiOff } from 'lucide-react';
 import { useOffline } from '../hooks/useOffline';
+import { useOfflineMessages } from '../hooks/useOfflineMessages';
+import { Check } from 'lucide-react';
 
 const Messages = () => {
   const isOffline = useOffline();
@@ -26,7 +28,7 @@ const Messages = () => {
         if (error) throw error;
         setMessages(data || []);
         
-        const cats = ['All', ...new Set(data.map(m => m.category).filter(Boolean))];
+        const cats = ['All', 'Saved Offline', ...new Set(data.map(m => m.category).filter(Boolean))];
         setCategories(cats);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -39,9 +41,21 @@ const Messages = () => {
   }, []);
 
   const filteredMessages = messages.filter(m => {
+    // Search filter
     const matchesSearch = m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          m.speaker.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || m.category === selectedCategory;
+    
+    // Category/Offline filter
+    let matchesCategory = true;
+    if (isOffline) {
+      // If offline, only show what's in downloadedIds
+      matchesCategory = downloadedIds.includes(m.id);
+    } else if (selectedCategory === 'Saved Offline') {
+      matchesCategory = downloadedIds.includes(m.id);
+    } else if (selectedCategory !== 'All') {
+      matchesCategory = m.category === selectedCategory;
+    }
+
     return matchesSearch && matchesCategory;
   });
 
@@ -53,11 +67,11 @@ const Messages = () => {
       />
 
       {isOffline && (
-        <div className="card" style={styles.offlineNotice}>
-          <WifiOff size={24} color="var(--light-blue)" />
+        <div className="card-light" style={styles.offlineNotice}>
+          <WifiOff size={24} color="var(--primary-blue)" />
           <div>
-            <p style={styles.offlineText}>Viewing messages in <strong>Offline Mode</strong>.</p>
-            <p style={styles.offlineSubtext}>Only previously viewed messages are available. Connect to the internet to see the latest updates.</p>
+            <p style={styles.offlineText}>You are offline. Showing downloaded messages only.</p>
+            <p style={styles.offlineSubtext}>Connect to the internet to see all messages.</p>
           </div>
         </div>
       )}
@@ -65,27 +79,32 @@ const Messages = () => {
       <div style={styles.controls}>
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
         
-        <div style={styles.filterSection}>
-          <div style={styles.filterHeader}>
-            <Filter size={20} color="var(--light-blue)" />
-            <span style={styles.filterLabel}>Filter by Category:</span>
+        {!isOffline && (
+          <div style={styles.filterSection}>
+            <div style={styles.filterHeader}>
+              <Filter size={20} color="var(--primary-blue)" />
+              <span style={styles.filterLabel}>Filter by Category:</span>
+            </div>
+            <div style={styles.categoryList}>
+              {categories.map(cat => (
+                <button 
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    ...styles.categoryBtn,
+                    background: selectedCategory === cat ? 'var(--primary-blue)' : 'white',
+                    color: selectedCategory === cat ? 'white' : 'var(--primary-blue)',
+                    borderColor: selectedCategory === cat ? 'var(--primary-blue)' : 'var(--border-light)',
+                    boxShadow: selectedCategory === cat ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                  }}
+                >
+                  {cat === 'Saved Offline' && <Check size={16} style={{ marginRight: '0.5rem' }} />}
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={styles.categoryList}>
-            {categories.map(cat => (
-              <button 
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  ...styles.categoryBtn,
-                  background: selectedCategory === cat ? 'var(--primary-blue)' : 'rgba(255,255,255,0.05)',
-                  borderColor: selectedCategory === cat ? 'var(--light-blue)' : 'var(--border)',
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
 
       {loading ? (
@@ -99,7 +118,11 @@ const Messages = () => {
       ) : (
         <div style={styles.empty}>
           <X size={48} color="var(--muted)" />
-          <p>No messages found matching your criteria.</p>
+          {isOffline ? (
+            <p style={{ maxWidth: '400px' }}>No messages are saved for offline reading yet. Connect to the internet and tap <strong>Download for Offline</strong> on any message.</p>
+          ) : (
+            <p>No messages found matching your criteria.</p>
+          )}
           <button onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }} className="btn-large" style={styles.resetBtn}>
             Clear Filters
           </button>
