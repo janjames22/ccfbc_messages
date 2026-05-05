@@ -103,10 +103,10 @@ const MessageDetail = () => {
 
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
-              <Bookmark size={28} color="var(--accent-blue)" />
+              <Bookmark size={28} color="var(--primary-blue)" />
               <h2>Summary</h2>
             </div>
-            <div className="card" style={styles.summaryCard}>
+            <div className="card-light" style={styles.summaryCard}>
               <p>{message.summary}</p>
             </div>
           </section>
@@ -114,12 +114,12 @@ const MessageDetail = () => {
           {message.key_points && message.key_points.length > 0 && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <Bookmark size={28} color="var(--accent-blue)" />
+                <Bookmark size={28} color="var(--primary-blue)" />
                 <h2>Key Points</h2>
               </div>
               <ul style={styles.pointsList}>
                 {message.key_points.map((point, index) => (
-                  <li key={index} className="card" style={styles.pointItem}>
+                  <li key={index} className="card-light" style={styles.pointItem}>
                     <span style={styles.pointNumber}>{index + 1}</span>
                     <p style={styles.pointText}>{point}</p>
                   </li>
@@ -131,10 +131,10 @@ const MessageDetail = () => {
           {message.full_notes && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <FileText size={28} color="var(--accent-blue)" />
+                <FileText size={28} color="var(--primary-blue)" />
                 <h2>Full Notes</h2>
               </div>
-              <div className="card" style={styles.notesContainer}>
+              <div className="card-light" style={styles.notesContainer}>
                 {message.full_notes.split('\n').map((para, i) => (
                   <p key={i} style={{ marginBottom: para ? '1.5rem' : '0.75rem' }}>{para}</p>
                 ))}
@@ -145,10 +145,10 @@ const MessageDetail = () => {
           {message.reflection_questions && message.reflection_questions.length > 0 && (
             <section style={styles.section}>
               <div style={styles.sectionHeader}>
-                <HelpCircle size={28} color="var(--accent-blue)" />
+                <HelpCircle size={28} color="var(--primary-blue)" />
                 <h2>Reflection Questions</h2>
               </div>
-              <div className="card" style={styles.questionsCard}>
+              <div className="card-light" style={styles.questionsCard}>
                 <ul style={styles.questionsList}>
                   {message.reflection_questions.map((q, i) => (
                     <li key={i} style={styles.questionItem}>
@@ -164,7 +164,7 @@ const MessageDetail = () => {
 
         <aside className="message-sidebar" style={styles.sidebar}>
           {message.related_verses && message.related_verses.length > 0 && (
-            <div className="card" style={styles.sidebarCard}>
+            <div className="card-light" style={styles.sidebarCard}>
               <h3 style={styles.sidebarTitle}>Related Verses</h3>
               <div style={styles.relatedList}>
                 {message.related_verses.map((v, i) => (
@@ -257,7 +257,7 @@ const styles = {
   },
   section: { marginBottom: '5rem' },
   sectionHeader: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' },
-  summaryCard: { padding: '2.5rem', fontSize: '1.2rem', color: 'var(--text-soft)', lineHeight: '1.7' },
+  summaryCard: { padding: '2.5rem', fontSize: '1.2rem', color: 'var(--text-dark)', lineHeight: '1.7' },
   pointsList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
   pointItem: { display: 'flex', gap: '1.5rem', padding: '2rem', alignItems: 'flex-start' },
   pointNumber: {
@@ -274,20 +274,20 @@ const styles = {
     flexShrink: 0,
     boxShadow: '0 4px 10px rgba(15, 95, 168, 0.3)',
   },
-  pointText: { fontSize: '1.25rem', fontWeight: '600', lineHeight: '1.5' },
-  notesContainer: { padding: 'clamp(1.5rem, 5vw, 3rem)', fontSize: '1.2rem', color: 'var(--text-soft)', lineHeight: '1.8' },
-  questionsCard: { padding: '2.5rem', background: 'rgba(11, 31, 54, 0.4)' },
+  pointText: { fontSize: '1.25rem', fontWeight: '600', lineHeight: '1.5', color: 'var(--text-dark)' },
+  notesContainer: { padding: 'clamp(1.5rem, 5vw, 3rem)', fontSize: '1.2rem', color: 'var(--text-dark)', lineHeight: '1.8' },
+  questionsCard: { padding: '2.5rem' },
   questionsList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
-  questionItem: { display: 'flex', gap: '1.25rem', alignItems: 'flex-start' },
-  bullet: { width: '10px', height: '10px', borderRadius: '50%', background: 'var(--accent-blue)', marginTop: '0.75rem', flexShrink: 0 },
+  questionItem: { display: 'flex', gap: '1.25rem', alignItems: 'flex-start', color: 'var(--text-dark)' },
+  bullet: { width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary-blue)', marginTop: '0.75rem', flexShrink: 0 },
   sidebar: {},
   sidebarCard: { padding: '2rem' },
-  sidebarTitle: { fontSize: '1.5rem', fontWeight: '800', marginBottom: '2rem', color: 'var(--light-blue)', borderBottom: '2px solid var(--border)', paddingBottom: '0.75rem' },
+  sidebarTitle: { fontSize: '1.5rem', fontWeight: '800', marginBottom: '2rem', color: 'var(--primary-blue)', borderBottom: '2px solid var(--border-light)', paddingBottom: '0.75rem' },
   relatedList: { display: 'flex', flexDirection: 'column', gap: '3rem' },
-  relatedItem: { paddingBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-  relatedRef: { fontWeight: '800', fontSize: '1.25rem', marginBottom: '0.75rem', color: 'white' },
-  relatedText: { fontSize: '1.1rem', fontStyle: 'italic', color: 'var(--muted)', marginBottom: '1.25rem', lineHeight: '1.6' },
-  relatedNote: { fontSize: '1rem', color: 'var(--light-blue)', marginBottom: '1.5rem', background: 'rgba(142, 203, 255, 0.05)', padding: '1rem', borderRadius: '8px' },
+  relatedItem: { paddingBottom: '2rem', borderBottom: '1px solid var(--border-light)' },
+  relatedRef: { fontWeight: '800', fontSize: '1.25rem', marginBottom: '0.75rem', color: 'var(--text-dark)' },
+  relatedText: { fontSize: '1.1rem', fontStyle: 'italic', color: 'var(--muted-dark)', marginBottom: '1.25rem', lineHeight: '1.6' },
+  relatedNote: { fontSize: '1rem', color: 'var(--primary-blue)', marginBottom: '1.5rem', background: 'rgba(142, 203, 255, 0.1)', padding: '1rem', borderRadius: '8px' },
   actionRow: { marginTop: '1rem' },
 };
 

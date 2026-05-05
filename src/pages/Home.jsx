@@ -117,11 +117,12 @@ const styles = {
     boxShadow: '0 8px 24px rgba(15, 95, 168, 0.4)',
   },
   secondaryBtn: {
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: 'white',
-    border: '1px solid var(--border)',
+    background: 'white',
+    color: 'var(--primary-blue)',
+    border: '1px solid var(--border-light)',
     flex: '1',
     minWidth: 'min(100%, 280px)',
+    boxShadow: 'var(--shadow-sm)',
   },
   section: {
     marginTop: 'clamp(2rem, 8vw, 4rem)',

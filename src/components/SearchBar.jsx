@@ -31,16 +31,16 @@ const styles = {
   },
   input: {
     width: '100%',
-    background: 'rgba(11, 31, 54, 0.6)',
-    border: '2px solid var(--border)',
+    background: 'white',
+    border: '2px solid var(--border-light)',
     borderRadius: '20px',
     padding: '1.25rem 1.25rem 1.25rem 3.5rem',
-    color: 'white',
+    color: 'var(--text-dark)',
     fontSize: '1.1rem',
     fontWeight: '600',
     outline: 'none',
     transition: 'var(--transition)',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+    boxShadow: 'var(--shadow-md)',
   },
 };
 

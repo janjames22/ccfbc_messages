@@ -86,7 +86,7 @@ const AddMessage = () => {
       />
 
       <form onSubmit={handleSubmit} style={styles.form}>
-        <div className="card" style={styles.formCard}>
+        <div className="card-light" style={styles.formCard}>
           <div style={styles.formGrid}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Message Title *</label>
@@ -244,15 +244,15 @@ const styles = {
     marginBottom: '2rem' 
   },
   formGroup: { marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' },
-  label: { fontSize: '1rem', fontWeight: '800', color: 'var(--light-blue)', textTransform: 'uppercase', letterSpacing: '1px' },
-  input: { background: 'rgba(5, 7, 13, 0.6)', border: '2px solid var(--border)', borderRadius: '16px', padding: '1.25rem', color: 'white', fontSize: '1.1rem', outline: 'none', width: '100%' },
-  textarea: { background: 'rgba(5, 7, 13, 0.6)', border: '2px solid var(--border)', borderRadius: '16px', padding: '1.25rem', color: 'white', fontSize: '1.1rem', outline: 'none', resize: 'vertical', minHeight: '120px', fontFamily: 'inherit', width: '100%', lineHeight: '1.6' },
-  divider: { height: '2px', background: 'var(--border)', margin: '3rem 0' },
-  sectionLabel: { fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'white' },
+  label: { fontSize: '1rem', fontWeight: '800', color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: '1px' },
+  input: { background: 'white', border: '2px solid var(--border-light)', borderRadius: '16px', padding: '1.25rem', color: 'var(--text-dark)', fontSize: '1.1rem', outline: 'none', width: '100%' },
+  textarea: { background: 'white', border: '2px solid var(--border-light)', borderRadius: '16px', padding: '1.25rem', color: 'var(--text-dark)', fontSize: '1.1rem', outline: 'none', resize: 'vertical', minHeight: '120px', fontFamily: 'inherit', width: '100%', lineHeight: '1.6' },
+  divider: { height: '2px', background: 'var(--border-light)', margin: '3rem 0' },
+  sectionLabel: { fontSize: '1.5rem', fontWeight: '900', marginBottom: '2rem', color: 'var(--text-dark)' },
   arrayRow: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center' },
   iconBtn: { padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '54px' },
-  addBtn: { color: 'var(--accent-blue)', fontWeight: '800', border: '2px dashed var(--border)', width: '100%', marginTop: '0.5rem' },
-  submitBtn: { width: '100%', background: 'var(--primary-blue)', color: 'white', borderRadius: '20px', boxShadow: '0 8px 32px rgba(15, 95, 168, 0.4)', marginTop: '2rem' },
+  addBtn: { color: 'var(--primary-blue)', fontWeight: '800', border: '2px dashed var(--border-light)', width: '100%', marginTop: '0.5rem' },
+  submitBtn: { width: '100%', background: 'var(--primary-blue)', color: 'white', borderRadius: '20px', boxShadow: 'var(--shadow-lg)', marginTop: '2rem' },
   offlineWarning: {
     background: 'rgba(255, 77, 77, 0.1)',
     border: '1px solid #ff4d4d',

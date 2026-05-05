@@ -116,18 +116,20 @@ const styles = {
     alignItems: 'center',
     gap: '1.5rem',
     marginBottom: '3rem',
-    background: 'rgba(30, 136, 229, 0.05)',
-    border: '1px dashed var(--accent-blue)',
+    background: 'white',
+    border: '1px solid var(--border-light)',
+    borderRadius: '20px',
+    boxShadow: 'var(--shadow-md)',
   },
   offlineText: {
     fontSize: '1.1rem',
     fontWeight: '700',
-    color: 'var(--text)',
+    color: 'var(--text-dark)',
     marginBottom: '0.25rem',
   },
   offlineSubtext: {
     fontSize: '0.95rem',
-    color: 'var(--muted)',
+    color: 'var(--muted-dark)',
   },
   controls: {
     display: 'flex',
@@ -148,7 +150,7 @@ const styles = {
   filterLabel: {
     fontSize: '1rem',
     fontWeight: '800',
-    color: 'var(--text-soft)',
+    color: 'var(--silver)',
     textTransform: 'uppercase',
     letterSpacing: '1px',
   },
@@ -166,6 +168,7 @@ const styles = {
     border: '1px solid transparent',
     transition: 'var(--transition)',
     minHeight: '48px',
+    cursor: 'pointer',
   },
   grid: {
     display: 'grid',

@@ -59,18 +59,20 @@ function App() {
 const styles = {
   footer: {
     padding: '4rem 0',
-    borderTop: '1px solid var(--border)',
-    background: 'rgba(5, 7, 13, 0.5)',
+    borderTop: '1px solid var(--border-light)',
+    background: 'rgba(5, 7, 13, 0.8)',
     marginTop: '4rem',
   },
   footerContent: {
     textAlign: 'center',
-    color: 'var(--muted)',
+    color: 'var(--silver)',
     fontSize: '0.9rem',
+    fontWeight: '500',
   },
   footerSubtitle: {
     marginTop: '0.5rem',
-    opacity: 0.6,
+    color: 'var(--muted)',
+    opacity: 0.8,
   }
 };
 

@@ -32,7 +32,7 @@ const Login = () => {
   return (
     <PageContainer>
       <div style={styles.container}>
-        <div className="card" style={styles.loginCard}>
+        <div className="card-light" style={styles.loginCard}>
           <LogoHeader size="large" className="logo-glow" />
           <h1 style={styles.title}>Admin Login</h1>
           <p style={styles.subtitle}>Sign in to contribute new messages to the archive.</p>
@@ -46,7 +46,7 @@ const Login = () => {
 
           <form onSubmit={handleLogin} style={styles.form}>
             <div style={styles.inputGroup}>
-              <Mail size={24} color="var(--muted)" style={styles.icon} />
+              <Mail size={24} color="var(--muted-dark)" style={styles.icon} />
               <input 
                 type="email" 
                 placeholder="Admin Email" 
@@ -58,7 +58,7 @@ const Login = () => {
             </div>
 
             <div style={styles.inputGroup}>
-              <Lock size={24} color="var(--muted)" style={styles.icon} />
+              <Lock size={24} color="var(--muted-dark)" style={styles.icon} />
               <input 
                 type="password" 
                 placeholder="Password" 
@@ -101,9 +101,10 @@ const styles = {
     fontWeight: '900',
     marginTop: '1.5rem',
     marginBottom: '0.5rem',
+    color: 'var(--text-dark)',
   },
   subtitle: {
-    color: 'var(--text-soft)',
+    color: 'var(--muted-dark)',
     marginBottom: '2.5rem',
     fontSize: '1.1rem',
   },
@@ -135,11 +136,11 @@ const styles = {
   },
   input: {
     width: '100%',
-    background: 'rgba(5, 7, 13, 0.6)',
-    border: '2px solid var(--border)',
+    background: 'white',
+    border: '2px solid var(--border-light)',
     borderRadius: '16px',
     padding: '1.25rem 1.25rem 1.25rem 3.5rem',
-    color: 'white',
+    color: 'var(--text-dark)',
     fontSize: '1.1rem',
     outline: 'none',
     transition: 'var(--transition)',
@@ -148,13 +149,13 @@ const styles = {
     background: 'var(--primary-blue)',
     color: 'white',
     width: '100%',
-    boxShadow: '0 8px 24px rgba(15, 95, 168, 0.3)',
+    boxShadow: 'var(--shadow-md)',
     marginTop: '1rem',
   },
   helpText: {
     marginTop: '2.5rem',
     fontSize: '0.9rem',
-    color: 'var(--muted)',
+    color: 'var(--muted-dark)',
     lineHeight: '1.5',
   }
 };

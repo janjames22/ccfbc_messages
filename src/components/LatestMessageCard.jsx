@@ -4,7 +4,7 @@ import { Calendar, User, ArrowRight, BookOpen } from 'lucide-react';
 
 const LatestMessageCard = ({ message }) => {
   return (
-    <div className="card" style={styles.card}>
+    <div className="card-light" style={styles.card}>
       <div style={styles.grid}>
         <div style={styles.content}>
           <div style={styles.badgeRow}>
@@ -16,11 +16,11 @@ const LatestMessageCard = ({ message }) => {
           
           <div style={styles.meta}>
             <div style={styles.metaItem}>
-              <User size={20} color="var(--accent-blue)" />
+              <User size={20} color="var(--primary-blue)" />
               <span>{message.speaker}</span>
             </div>
             <div style={styles.metaItem}>
-              <Calendar size={20} color="var(--accent-blue)" />
+              <Calendar size={20} color="var(--primary-blue)" />
               <span>{new Date(message.service_date).toLocaleDateString(undefined, { dateStyle: 'medium' })}</span>
             </div>
           </div>
@@ -29,7 +29,7 @@ const LatestMessageCard = ({ message }) => {
           
           <div style={styles.footer}>
             <div style={styles.verseBox}>
-              <BookOpen size={24} color="var(--light-blue)" />
+              <BookOpen size={24} color="var(--primary-blue)" />
               <div>
                 <div style={styles.verseLabel}>Main Passage</div>
                 <div style={styles.verseRef}>{message.main_verse_reference}</div>
@@ -47,8 +47,6 @@ const LatestMessageCard = ({ message }) => {
 
 const styles = {
   card: {
-    background: 'linear-gradient(145deg, rgba(11, 31, 54, 0.9) 0%, rgba(7, 21, 39, 0.95) 100%)',
-    border: '1px solid rgba(142, 203, 255, 0.25)',
     width: '100%',
   },
   grid: {
@@ -75,8 +73,8 @@ const styles = {
     letterSpacing: '1px',
   },
   categoryBadge: {
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: 'var(--light-blue)',
+    background: 'var(--border-light)',
+    color: 'var(--primary-blue)',
     padding: '0.4rem 0.8rem',
     borderRadius: '100px',
     fontSize: '0.75rem',
@@ -88,6 +86,7 @@ const styles = {
     fontWeight: '900',
     lineHeight: '1.2',
     margin: 0,
+    color: 'var(--text-dark)',
   },
   meta: {
     display: 'flex',
@@ -100,14 +99,13 @@ const styles = {
     gap: '0.5rem',
     fontSize: '1rem',
     fontWeight: '600',
-    color: 'var(--text-soft)',
+    color: 'var(--text-dark)',
   },
   summary: {
     fontSize: 'clamp(1rem, 3.5vw, 1.15rem)',
     lineHeight: '1.7',
-    color: 'var(--text-soft)',
+    color: 'var(--muted-dark)',
     maxWidth: '800px',
-    opacity: 0.9,
   },
   footer: {
     display: 'flex',
@@ -117,7 +115,7 @@ const styles = {
     flexWrap: 'wrap',
     marginTop: '0.5rem',
     paddingTop: '1.5rem',
-    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    borderTop: '1px solid var(--border-light)',
   },
   verseBox: {
     display: 'flex',
@@ -127,19 +125,19 @@ const styles = {
   verseLabel: {
     fontSize: '0.75rem',
     textTransform: 'uppercase',
-    color: 'var(--muted)',
+    color: 'var(--muted-dark)',
     fontWeight: '700',
     letterSpacing: '1px',
   },
   verseRef: {
     fontSize: '1.1rem',
     fontWeight: '800',
-    color: 'var(--light-blue)',
+    color: 'var(--primary-blue)',
   },
   ctaBtn: {
     background: 'var(--primary-blue)',
     color: 'white',
-    boxShadow: '0 8px 24px rgba(15, 95, 168, 0.3)',
+    boxShadow: 'var(--shadow-md)',
     flex: '1',
     minWidth: 'min(100%, 250px)',
     maxWidth: '100%',
