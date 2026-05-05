@@ -6,6 +6,7 @@ const CONTENT_KEY_PREFIX = 'ccfbc_msg_';
 export const useOfflineMessages = () => {
   const [downloadedIds, setDownloadedIds] = useState(() => {
     try {
+      if (typeof window === 'undefined') return [];
       const saved = localStorage.getItem(IDS_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
@@ -25,6 +26,7 @@ export const useOfflineMessages = () => {
   const isDownloaded = (id) => downloadedIds.includes(id);
 
   const saveMessageOffline = (message) => {
+    if (typeof window === 'undefined') return false;
     if (!message || !message.id) return false;
 
     try {
@@ -58,6 +60,7 @@ export const useOfflineMessages = () => {
   };
 
   const removeMessageOffline = (id) => {
+    if (typeof window === 'undefined') return false;
     try {
       localStorage.removeItem(`${CONTENT_KEY_PREFIX}${id}`);
       setDownloadedIds(prev => prev.filter(itemId => itemId !== id));
@@ -69,6 +72,7 @@ export const useOfflineMessages = () => {
   };
 
   const getOfflineMessage = (id) => {
+    if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(`${CONTENT_KEY_PREFIX}${id}`);
       return saved ? JSON.parse(saved) : null;
