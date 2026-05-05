@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import OfflineBanner from './components/OfflineBanner';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
 import MessageDetail from './pages/MessageDetail';
@@ -24,6 +25,7 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="app-layout">
+          <OfflineBanner />
           <Navbar />
           <main>
             <Routes>

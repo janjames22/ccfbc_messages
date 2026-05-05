@@ -4,9 +4,11 @@ import PageContainer from '../components/PageContainer';
 import SectionTitle from '../components/SectionTitle';
 import BibleVersionSelect from '../components/BibleVersionSelect';
 import { supabase } from '../lib/supabaseClient';
-import { Save, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowLeft, WifiOff } from 'lucide-react';
+import { useOffline } from '../hooks/useOffline';
 
 const AddMessage = () => {
+  const isOffline = useOffline();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -211,7 +213,18 @@ const AddMessage = () => {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-large" style={styles.submitBtn}>
+          {isOffline && (
+            <div style={styles.offlineWarning}>
+              <WifiOff size={24} />
+              <p>You cannot add messages while offline. Please connect to the internet to save your work.</p>
+            </div>
+          )}
+
+          <button type="submit" disabled={loading || isOffline} className="btn-large" style={{
+            ...styles.submitBtn,
+            opacity: (loading || isOffline) ? 0.5 : 1,
+            cursor: (loading || isOffline) ? 'not-allowed' : 'pointer'
+          }}>
             {loading ? 'Saving...' : <><Save size={28} /> Save Message</>}
           </button>
         </div>
@@ -240,6 +253,19 @@ const styles = {
   iconBtn: { padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '54px' },
   addBtn: { color: 'var(--accent-blue)', fontWeight: '800', border: '2px dashed var(--border)', width: '100%', marginTop: '0.5rem' },
   submitBtn: { width: '100%', background: 'var(--primary-blue)', color: 'white', borderRadius: '20px', boxShadow: '0 8px 32px rgba(15, 95, 168, 0.4)', marginTop: '2rem' },
+  offlineWarning: {
+    background: 'rgba(255, 77, 77, 0.1)',
+    border: '1px solid #ff4d4d',
+    color: '#ff4d4d',
+    padding: '1.5rem',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+    marginBottom: '2rem',
+    fontSize: '1.1rem',
+    fontWeight: '700',
+  }
 };
 
 export default AddMessage;

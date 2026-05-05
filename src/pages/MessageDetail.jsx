@@ -5,9 +5,11 @@ import VerseBox from '../components/VerseBox';
 import BibleLinkButton from '../components/BibleLinkButton';
 import BibleVersionSelect from '../components/BibleVersionSelect';
 import { supabase } from '../lib/supabaseClient';
-import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark } from 'lucide-react';
+import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark, WifiOff } from 'lucide-react';
+import { useOffline } from '../hooks/useOffline';
 
 const MessageDetail = () => {
+  const isOffline = useOffline();
   const { id } = useParams();
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +59,14 @@ const MessageDetail = () => {
 
       <header style={styles.header}>
         <div style={styles.meta}>
-          <span style={styles.category}>{message.category}</span>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <span style={styles.category}>{message.category}</span>
+            {isOffline && (
+              <span style={styles.offlineBadge}>
+                <WifiOff size={14} /> Offline Mode
+              </span>
+            )}
+          </div>
           <div style={styles.metaRow}>
             <div style={styles.metaItem}>
               <Calendar size={20} color="var(--accent-blue)" />
@@ -217,6 +226,19 @@ const styles = {
     textTransform: 'uppercase',
     letterSpacing: '1px',
     display: 'inline-block',
+    marginBottom: '1.5rem',
+  },
+  offlineBadge: {
+    background: 'rgba(255, 255, 255, 0.05)',
+    color: 'var(--muted)',
+    padding: '0.4rem 1rem',
+    borderRadius: '100px',
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    border: '1px solid var(--border)',
     marginBottom: '1.5rem',
   },
   metaRow: { display: 'flex', gap: '2rem', flexWrap: 'wrap' },

@@ -4,9 +4,11 @@ import SectionTitle from '../components/SectionTitle';
 import MessageCard from '../components/MessageCard';
 import SearchBar from '../components/SearchBar';
 import { supabase } from '../lib/supabaseClient';
-import { Filter, X } from 'lucide-react';
+import { Filter, X, WifiOff } from 'lucide-react';
+import { useOffline } from '../hooks/useOffline';
 
 const Messages = () => {
+  const isOffline = useOffline();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,6 +51,16 @@ const Messages = () => {
         title="Message Archive" 
         subtitle="Explore our collection of Sunday worship messages and study notes." 
       />
+
+      {isOffline && (
+        <div className="card" style={styles.offlineNotice}>
+          <WifiOff size={24} color="var(--light-blue)" />
+          <div>
+            <p style={styles.offlineText}>Viewing messages in <strong>Offline Mode</strong>.</p>
+            <p style={styles.offlineSubtext}>Only previously viewed messages are available. Connect to the internet to see the latest updates.</p>
+          </div>
+        </div>
+      )}
 
       <div style={styles.controls}>
         <SearchBar value={searchTerm} onChange={setSearchTerm} />
@@ -98,6 +110,25 @@ const Messages = () => {
 };
 
 const styles = {
+  offlineNotice: {
+    padding: '1.5rem 2rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.5rem',
+    marginBottom: '3rem',
+    background: 'rgba(30, 136, 229, 0.05)',
+    border: '1px dashed var(--accent-blue)',
+  },
+  offlineText: {
+    fontSize: '1.1rem',
+    fontWeight: '700',
+    color: 'var(--text)',
+    marginBottom: '0.25rem',
+  },
+  offlineSubtext: {
+    fontSize: '0.95rem',
+    color: 'var(--muted)',
+  },
   controls: {
     display: 'flex',
     flexDirection: 'column',
