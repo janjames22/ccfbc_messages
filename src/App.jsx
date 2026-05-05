@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Messages from './pages/Messages';
 import MessageDetail from './pages/MessageDetail';
 import AddMessage from './pages/AddMessage';
+import EditMessage from './pages/EditMessage';
 import Bible from './pages/Bible';
 import Login from './pages/Login';
 
@@ -39,6 +40,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AddMessage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/messages/edit/:id" 
+                element={
+                  <ProtectedRoute>
+                    <EditMessage />
                   </ProtectedRoute>
                 } 
               />

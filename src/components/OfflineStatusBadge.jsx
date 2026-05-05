@@ -19,19 +19,20 @@ const styles = {
   badge: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.4rem',
-    background: '#e8f5e9',
-    color: '#2e7d32',
-    padding: '0.25rem 0.75rem',
+    gap: '0.5rem',
+    background: '#f0fdf4',
+    color: '#166534',
+    padding: '0.4rem 1rem',
     borderRadius: '100px',
-    fontSize: '0.75rem',
-    fontWeight: '800',
-    border: '1px solid #a5d6a7',
+    fontSize: 'var(--font-xs)',
+    fontWeight: '900',
+    border: '2px solid #bbf7d0',
     width: 'fit-content',
+    boxShadow: '0 2px 8px rgba(22, 101, 52, 0.1)',
   },
   label: {
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '1px',
   }
 };
 

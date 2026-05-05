@@ -5,29 +5,29 @@
   --card-light: #ffffff;
   --primary-blue: #0f5fa8;
   --accent-blue: #1e88e5;
-  --light-blue: #8ecbff;
+  --light-blue: #70baff;
   --text: #ffffff;
   --text-dark: #0f172a;
-  --text-soft: #d7e6f5;
-  --muted: #8fa7bd;
-  --muted-dark: #64748b;
-  --border: #2c4a63;
-  --border-light: #e2e8f0;
-  --silver: #c7d0d9;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --text-soft: #f8fafc;
+  --muted: #e2e8f0;
+  --muted-dark: #334155;
+  --border: #334155;
+  --border-light: #cbd5e1;
+  --silver: #e2e8f0;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   
-  --font-xs: 0.875rem;
-  --font-sm: 1rem;
-  --font-base: 1.125rem;
-  --font-md: 1.25rem;
-  --font-lg: 1.5rem;
-  --font-xl: 2rem;
-  --font-xxl: 3rem;
+  --font-xs: 1rem;
+  --font-sm: 1.125rem;
+  --font-base: 1.35rem;
+  --font-md: 1.625rem;
+  --font-lg: 1.875rem;
+  --font-xl: 2.5rem;
+  --font-xxl: 3.75rem;
 
-  --nav-height: 72px;
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --nav-height: 88px;
+  --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -38,13 +38,14 @@
 }
 
 html, body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #05070d;
   color: var(--text);
-  line-height: 1.6;
+  line-height: 1.7;
   overflow-x: hidden;
   width: 100%;
   min-height: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
@@ -71,86 +72,103 @@ main {
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
 }
 
 @media (min-width: 640px) {
   .container {
-    padding: 0 1.5rem;
+    padding: 0 2.5rem;
   }
 }
 
 h1, h2, h3, h4, h5, h6 {
-  line-height: 1.2;
-  margin-bottom: 1rem;
+  line-height: 1.15;
+  margin-bottom: 2rem;
   color: var(--text);
+  letter-spacing: -0.03em;
 }
 
 h1 { font-size: var(--font-xxl); font-weight: 900; }
-h2 { font-size: var(--font-xl); font-weight: 800; }
+h2 { font-size: var(--font-xl); font-weight: 900; }
+h3 { font-size: var(--font-lg); font-weight: 800; }
 
 a {
   color: var(--light-blue);
   text-decoration: none;
   transition: var(--transition);
+  font-weight: 700;
 }
 
 .card {
-  background: rgba(11, 31, 54, 0.85);
-  border: 1px solid rgba(142, 203, 255, 0.18);
+  background: rgba(11, 31, 54, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 24px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   transition: var(--transition);
   overflow: hidden;
 }
 
 .card-light {
   background: var(--card-light);
-  border: 1px solid var(--border-light);
-  border-radius: 24px;
-  box-shadow: var(--shadow-md);
+  border: 2px solid var(--border-light);
+  border-radius: 32px;
+  box-shadow: var(--shadow-lg);
   transition: var(--transition);
   overflow: hidden;
   color: var(--text-dark);
 }
 
 .logo-glow {
-  filter: drop-shadow(0 0 28px rgba(30, 136, 229, 0.45));
+  filter: drop-shadow(0 0 32px rgba(30, 136, 229, 0.6));
 }
 
 .btn-large {
-  min-height: 56px;
-  padding: 1rem 1.5rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 16px;
+  min-height: 72px;
+  padding: 1.25rem 2.5rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+  border-radius: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 1rem;
   user-select: none;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --font-xxl: 3rem;
+    --font-xl: 2.25rem;
+    --font-base: 1.25rem;
+  }
 }
 
 @media (max-width: 768px) {
   :root {
-    --font-xxl: 2.25rem;
-    --font-xl: 1.75rem;
-    --font-lg: 1.35rem;
-    --font-base: 1.05rem;
-    --nav-height: 64px;
+    --font-xxl: 2.5rem;
+    --font-xl: 2rem;
+    --font-lg: 1.75rem;
+    --font-base: 1.15rem;
+    --nav-height: 72px;
   }
   
-  .card {
-    border-radius: 20px;
+  .card, .card-light {
+    border-radius: 24px;
   }
 }
 
 @media (max-width: 480px) {
   :root {
-    --font-xxl: 1.85rem;
-    --font-xl: 1.5rem;
+    --font-xxl: 2.25rem;
+    --font-xl: 1.85rem;
+    --font-lg: 1.6rem;
+    --font-base: 1.125rem;
   }
 }
 
