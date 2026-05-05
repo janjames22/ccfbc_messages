@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon-192.jpg', 'icon-512.jpg'],
       manifest: {
         name: 'CCFBC Message Archive',
