@@ -11,6 +11,7 @@ import { Check } from 'lucide-react';
 
 const Messages = () => {
   const isOffline = useOffline();
+  const { downloadedIds } = useOfflineMessages();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

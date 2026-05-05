@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Check, Trash2, Smartphone } from 'lucide-react';
+import { Download, Check, Trash2, Smartphone, AlertCircle } from 'lucide-react';
 import { useOfflineMessages } from '../hooks/useOfflineMessages';
 import { useOffline } from '../hooks/useOffline';
 
-const DownloadOfflineButton = ({ messageId, title, variant = 'large' }) => {
-  const { isDownloaded, toggleDownload } = useOfflineMessages();
+const DownloadOfflineButton = ({ message, variant = 'large' }) => {
+  const { isDownloaded, saveMessageOffline, removeMessageOffline } = useOfflineMessages();
   const isOffline = useOffline();
   const [toast, setToast] = useState(null);
+  const [error, setError] = useState(null);
 
+  const messageId = message?.id;
   const downloaded = isDownloaded(messageId);
 
   useEffect(() => {
@@ -17,17 +19,37 @@ const DownloadOfflineButton = ({ messageId, title, variant = 'large' }) => {
     }
   }, [toast]);
 
-  const handleToggle = () => {
-    if (isOffline && !downloaded) {
-      setToast('Please connect to the internet to download.');
-      return;
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
     }
+  }, [error]);
 
-    const result = toggleDownload(messageId);
-    if (result === 'saved') {
-      setToast('Saved for offline reading.');
-    } else if (result === 'removed') {
-      setToast('Removed from offline reading.');
+  const handleToggle = () => {
+    if (!messageId) return;
+
+    if (downloaded) {
+      if (window.confirm('Remove this message from offline reading?')) {
+        const success = removeMessageOffline(messageId);
+        if (success) {
+          setToast('Removed from offline reading.');
+        } else {
+          setError('Failed to remove message.');
+        }
+      }
+    } else {
+      if (isOffline) {
+        setToast('Please connect to the internet to download.');
+        return;
+      }
+
+      const success = saveMessageOffline(message);
+      if (success) {
+        setToast('Saved for offline reading.');
+      } else {
+        setError('Failed to save message. Storage might be full.');
+      }
     }
   };
 
@@ -42,6 +64,7 @@ const DownloadOfflineButton = ({ messageId, title, variant = 'large' }) => {
           {downloaded ? <Check size={20} /> : <Download size={20} />}
         </button>
         {toast && <div style={styles.miniToast}>{toast}</div>}
+        {error && <div style={{...styles.miniToast, background: '#ef4444'}}>{error}</div>}
       </div>
     );
   }
@@ -83,6 +106,13 @@ const DownloadOfflineButton = ({ messageId, title, variant = 'large' }) => {
         <div style={styles.toast}>
           <Smartphone size={20} />
           <span>{toast}</span>
+        </div>
+      )}
+
+      {error && (
+        <div style={{...styles.toast, background: '#ef4444', border: 'none'}}>
+          <AlertCircle size={20} />
+          <span>{error}</span>
         </div>
       )}
     </div>
@@ -196,15 +226,5 @@ const styles = {
     boxShadow: 'var(--shadow-lg)',
   }
 };
-
-// Add keyframes to head
-const styleTag = document.createElement('style');
-styleTag.innerHTML = `
-  @keyframes slideUp {
-    from { transform: translate(-50%, 20px); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
-  }
-`;
-document.head.appendChild(styleTag);
 
 export default DownloadOfflineButton;

@@ -7,13 +7,14 @@ import BibleVersionSelect from '../components/BibleVersionSelect';
 import DownloadOfflineButton from '../components/DownloadOfflineButton';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark, WifiOff, Smartphone, Edit, Trash2 } from 'lucide-react';
+import { Calendar, User, ArrowLeft, BookOpen, HelpCircle, FileText, Bookmark, WifiOff, Smartphone, Edit, Trash2, AlertCircle } from 'lucide-react';
 import { useOffline } from '../hooks/useOffline';
 import { useOfflineMessages } from '../hooks/useOfflineMessages';
+import { useNavigate } from 'react-router-dom';
 
 const MessageDetail = () => {
   const isOffline = useOffline();
-  const { isDownloaded } = useOfflineMessages();
+  const { isDownloaded, getOfflineMessage } = useOfflineMessages();
   const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -25,6 +26,18 @@ const MessageDetail = () => {
   useEffect(() => {
     const fetchMessage = async () => {
       try {
+        if (isOffline) {
+          const offlineData = getOfflineMessage(id);
+          if (offlineData) {
+            setMessage(offlineData);
+            if (offlineData.bible_version) {
+              setSelectedVersion(offlineData.bible_version);
+            }
+            setLoading(false);
+            return;
+          }
+        }
+
         const { data, error } = await supabase
           .from('messages')
           .select('*')
@@ -38,6 +51,14 @@ const MessageDetail = () => {
         }
       } catch (error) {
         console.error('Error fetching message:', error);
+        // If it failed and we are offline, try one more time to get it from storage 
+        // just in case it was saved but fetch (which SW might have tried) failed.
+        const fallbackData = getOfflineMessage(id);
+        if (fallbackData) {
+          setMessage(fallbackData);
+        } else {
+          setError('We couldn\'t load this message. It might not be saved for offline reading.');
+        }
       } finally {
         setLoading(false);
       }
@@ -93,7 +114,23 @@ const MessageDetail = () => {
         </PageContainer>
       );
     }
-    return <PageContainer><div style={styles.error}>Message not found.</div></PageContainer>;
+    return (
+      <PageContainer>
+        <div style={styles.topBar}>
+          <Link to="/messages" style={styles.backLink}>
+            <ArrowLeft size={24} /> <span>Back to Archive</span>
+          </Link>
+        </div>
+        <div style={styles.errorContainer}>
+          <AlertCircle size={64} color="#ef4444" />
+          <h2>Something went wrong</h2>
+          <p>We had trouble loading this message. Please refresh or check your internet connection.</p>
+          <button onClick={() => window.location.reload()} className="btn-large" style={styles.retryBtn}>
+            Retry Loading
+          </button>
+        </div>
+      </PageContainer>
+    );
   }
 
   return (
@@ -138,7 +175,7 @@ const MessageDetail = () => {
 
             <div style={styles.actionContainer}>
               <div style={{ flex: '1 1 300px' }}>
-                <DownloadOfflineButton messageId={message.id} title={message.title} />
+                <DownloadOfflineButton message={message} />
               </div>
               
               {user && !isOffline && (
@@ -198,12 +235,15 @@ const MessageDetail = () => {
                 <h2>Key Points</h2>
               </div>
               <ul style={styles.pointsList}>
-                {message.key_points.map((point, index) => (
-                  <li key={index} className="card-light" style={styles.pointItem}>
-                    <span style={styles.pointNumber}>{index + 1}</span>
-                    <p style={styles.pointText}>{point}</p>
-                  </li>
-                ))}
+                {message.key_points.map((point, index) => {
+                  if (!point) return null;
+                  return (
+                    <li key={index} className="card-light" style={styles.pointItem}>
+                      <span style={styles.pointNumber}>{index + 1}</span>
+                      <p style={styles.pointText}>{point}</p>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           )}
@@ -215,9 +255,10 @@ const MessageDetail = () => {
                 <h2>Full Notes</h2>
               </div>
               <div className="card-light" style={styles.notesContainer}>
-                {message.full_notes.split('\n').map((para, i) => (
-                  <p key={i} style={styles.noteParagraph}>{para}</p>
-                ))}
+                {String(message.full_notes).split('\n').map((para, i) => {
+                  if (!para.trim()) return null;
+                  return <p key={i} style={styles.noteParagraph}>{para}</p>;
+                })}
               </div>
             </section>
           )}
@@ -284,6 +325,25 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  errorContainer: {
+    textAlign: 'center',
+    padding: '5rem 1.5rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '2rem',
+    background: 'white',
+    borderRadius: '32px',
+    border: '2px solid #fee2e2',
+    marginTop: '2rem',
+    boxShadow: 'var(--shadow-lg)',
+  },
+  retryBtn: {
+    background: 'var(--primary-blue)',
+    color: 'white',
+    marginTop: '1rem',
   },
   topBar: {
     display: 'flex',

@@ -1,40 +1,90 @@
 import { useState, useEffect } from 'react';
 
-const STORAGE_KEY = 'ccfbc_downloaded_messages';
+const IDS_KEY = 'ccfbc_downloaded_ids';
+const CONTENT_KEY_PREFIX = 'ccfbc_msg_';
 
 export const useOfflineMessages = () => {
   const [downloadedIds, setDownloadedIds] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(IDS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Error parsing downloaded IDs:', e);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(downloadedIds));
+    try {
+      localStorage.setItem(IDS_KEY, JSON.stringify(downloadedIds));
+    } catch (e) {
+      console.error('Error saving downloaded IDs:', e);
+    }
   }, [downloadedIds]);
 
   const isDownloaded = (id) => downloadedIds.includes(id);
 
-  const toggleDownload = (id) => {
-    if (isDownloaded(id)) {
-      if (window.confirm('Remove this message from offline reading?')) {
-        setDownloadedIds(prev => prev.filter(item => item !== id));
-        return 'removed';
+  const saveMessageOffline = (message) => {
+    if (!message || !message.id) return false;
+
+    try {
+      // Validate and sanitize message object
+      const sanitizedMessage = {
+        id: message.id,
+        title: message.title || 'Untitled Message',
+        speaker: message.speaker || 'Unknown Speaker',
+        service_date: message.service_date || new Date().toISOString(),
+        main_verse_reference: message.main_verse_reference || '',
+        main_verse_text: message.main_verse_text || '',
+        summary: message.summary || '',
+        key_points: Array.isArray(message.key_points) ? message.key_points : [],
+        full_notes: message.full_notes || '',
+        reflection_questions: Array.isArray(message.reflection_questions) ? message.reflection_questions : [],
+        related_verses: Array.isArray(message.related_verses) ? message.related_verses : [],
+        category: message.category || 'General',
+        bible_version: message.bible_version || 'ESV',
+      };
+
+      localStorage.setItem(`${CONTENT_KEY_PREFIX}${message.id}`, JSON.stringify(sanitizedMessage));
+      
+      if (!downloadedIds.includes(message.id)) {
+        setDownloadedIds(prev => [...prev, message.id]);
       }
-      return 'cancelled';
-    } else {
-      setDownloadedIds(prev => [...prev, id]);
-      return 'saved';
+      return true;
+    } catch (e) {
+      console.error('Error saving message offline:', e);
+      return false;
     }
   };
 
-  const removeDownload = (id) => {
-    setDownloadedIds(prev => prev.filter(item => item !== id));
+  const removeMessageOffline = (id) => {
+    try {
+      localStorage.removeItem(`${CONTENT_KEY_PREFIX}${id}`);
+      setDownloadedIds(prev => prev.filter(itemId => itemId !== id));
+      return true;
+    } catch (e) {
+      console.error('Error removing offline message:', e);
+      return false;
+    }
+  };
+
+  const getOfflineMessage = (id) => {
+    try {
+      const saved = localStorage.getItem(`${CONTENT_KEY_PREFIX}${id}`);
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      console.error('Error getting offline message:', e);
+      // If corrupted, remove it
+      removeMessageOffline(id);
+      return null;
+    }
   };
 
   return {
     downloadedIds,
     isDownloaded,
-    toggleDownload,
-    removeDownload
+    saveMessageOffline,
+    removeMessageOffline,
+    getOfflineMessage
   };
 };
