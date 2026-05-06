@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { 
@@ -6,8 +6,6 @@ import {
   Copy, WifiOff, AlertTriangle, CheckCircle2, Globe, Share2, Bookmark
 } from 'lucide-react';
 import { 
-  getAvailableLanguages, 
-  getVersionsByLanguage, 
   getPassage, 
   getExternalBibleUrl, 
   downloadVersion, 
@@ -20,18 +18,41 @@ import { bibleVersions } from '../data/bibleVersions';
 import { bibleBooks } from '../data/bibleBooks';
 import BibleVersionSelect from '../components/BibleVersionSelect';
 
+const getInitialBibleSelection = (search) => {
+  const params = new URLSearchParams(search);
+  const versionParam = params.get('version');
+  const refParam = params.get('reference');
+  const selectedVersion = bibleVersions.find(v => v.id === versionParam) || bibleVersions.find(v => v.id === 'KJV') || bibleVersions[0];
+  const match = refParam?.match(/^(\d?\s?[a-zA-Z]+(?:\s+of\s+[a-zA-Z]+)?)\s+(\d+)/);
+  const normalizedBook = match?.[1].trim().toLowerCase();
+  const matchedBook = match
+    ? bibleBooks.find(b => {
+      if (b.name.toLowerCase() === normalizedBook) return true;
+      if (b.name === 'Psalms' && normalizedBook === 'psalm') return true;
+      if (b.name === 'Revelation' && normalizedBook === 'revelations') return true;
+      return false;
+    })
+    : null;
+  const chapter = matchedBook ? Number(match[2]) : 1;
+  const book = matchedBook?.name || bibleBooks[39].name;
+
+  return {
+    version: selectedVersion?.id || 'KJV',
+    book,
+    chapter,
+    reference: `${book} ${chapter}`
+  };
+};
+
 const Bible = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [initialSelection] = useState(() => getInitialBibleSelection(location.search));
   
-  const [languages] = useState(getAvailableLanguages());
-  const [language, setLanguage] = useState('English');
-  const [versions, setVersions] = useState(getVersionsByLanguage('English'));
-  const [version, setVersion] = useState(versions[0]?.id || 'KJV');
+  const [version, setVersion] = useState(initialSelection.version);
   
-  const [book, setBook] = useState(bibleBooks[39].name); // Matthew
-  const [chapter, setChapter] = useState(1);
-  const [availableChapters, setAvailableChapters] = useState(28);
+  const [book, setBook] = useState(initialSelection.book);
+  const [chapter, setChapter] = useState(initialSelection.chapter);
   
   const [passageText, setPassageText] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -41,81 +62,13 @@ const Bible = () => {
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [downloadedList, setDownloadedList] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
-
-  // Parse Query Params on Mount
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const refParam = params.get('reference');
-    const versionParam = params.get('version');
-    
-    if (versionParam && bibleVersions.find(v => v.id === versionParam)) {
-      setVersion(versionParam);
-      const targetLang = bibleVersions.find(v => v.id === versionParam).language;
-      if (targetLang !== language) setLanguage(targetLang);
-    }
-    
-    if (refParam) {
-      // Basic parsing: split by space, pop last as chapter, rest as book (e.g., "1 John 3" or "John 3:16")
-      // We will simplify to just finding the book and chapter if possible.
-      const match = refParam.match(/^(\d?\s?[a-zA-Z]+)\s+(\d+)/);
-      if (match) {
-        const parsedBook = match[1].trim();
-        const parsedChapter = parseInt(match[2], 10);
-        const bookObj = bibleBooks.find(b => b.name.toLowerCase() === parsedBook.toLowerCase());
-        
-        if (bookObj) {
-          setBook(bookObj.name);
-          setChapter(parsedChapter);
-          // Auto-fetch if query param is present
-          fetchPassageData(`${bookObj.name} ${parsedChapter}`, versionParam || version);
-        }
-      }
-    }
-  }, []);
+  const [downloadProgress, setDownloadProgress] = useState(null);
 
   const currentVersionConfig = bibleVersions.find(v => v.id === version);
   const needsLicense = requiresLicensedApi(version);
+  const availableChapters = bibleBooks.find(b => b.name === book)?.chapters || 1;
 
-  useEffect(() => {
-    const vers = getVersionsByLanguage(language);
-    setVersions(vers);
-    if (vers.length > 0 && !vers.find(v => v.id === version)) {
-      setVersion(vers[0].id);
-    }
-  }, [language]);
-
-  useEffect(() => {
-    const selectedBook = bibleBooks.find(b => b.name === book);
-    if (selectedBook) {
-      setAvailableChapters(selectedBook.chapters);
-      if (chapter > selectedBook.chapters) {
-        setChapter(1);
-      }
-    }
-  }, [book]);
-
-  useEffect(() => {
-    checkDownloadStatus();
-    loadDownloadedList();
-  }, [version]);
-
-  const checkDownloadStatus = async () => {
-    const downloaded = await isVersionDownloaded(version);
-    setIsDownloaded(downloaded);
-  };
-
-  const loadDownloadedList = async () => {
-    const list = await listDownloadedVersions();
-    setDownloadedList(list);
-  };
-
-  const handleVersionSelect = (id) => {
-    setVersion(id);
-    const targetLang = bibleVersions.find(v => v.id === id)?.language;
-    if (targetLang) setLanguage(targetLang);
-  };
-
-  const fetchPassageData = async (refStr, verId) => {
+  const fetchPassageData = useCallback(async (refStr, verId) => {
     setLoading(true);
     setError('');
     setPassageText(null);
@@ -127,6 +80,43 @@ const Bible = () => {
       setError(err.message || 'Failed to load passage. Please check your connection or try again.');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const refreshDownloadedState = useCallback(async () => {
+    const [downloaded, list] = await Promise.all([
+      isVersionDownloaded(version),
+      listDownloadedVersions()
+    ]);
+    setIsDownloaded(downloaded);
+    setDownloadedList(list);
+  }, [version]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      refreshDownloadedState();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [refreshDownloadedState]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      fetchPassageData(initialSelection.reference, initialSelection.version);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [fetchPassageData, initialSelection.reference, initialSelection.version]);
+
+  const handleVersionSelect = (id) => {
+    setVersion(id);
+  };
+
+  const handleBookSelect = (nextBookName) => {
+    const nextBook = bibleBooks.find(b => b.name === nextBookName);
+    setBook(nextBookName);
+    if (nextBook && chapter > nextBook.chapters) {
+      setChapter(1);
     }
   };
 
@@ -172,11 +162,14 @@ const Bible = () => {
     if (!currentVersionConfig?.canDownload) return;
     
     setIsDownloading(true);
+    setDownloadProgress({ stage: 'Starting download...', percent: 1 });
     setError('');
     try {
-      await downloadVersion(version);
-      await checkDownloadStatus();
-      await loadDownloadedList();
+      await downloadVersion(version, setDownloadProgress);
+      await refreshDownloadedState();
+      if (passageText?.version === version) {
+        await fetchPassageData(passageText.reference, version);
+      }
     } catch (err) {
       setError(err.message || 'Failed to download version.');
     } finally {
@@ -187,16 +180,25 @@ const Bible = () => {
   const handleRemoveDownload = async (idToRemove) => {
     try {
       await deleteDownloadedVersion(idToRemove);
-      if (idToRemove === version) await checkDownloadStatus();
-      await loadDownloadedList();
+      await refreshDownloadedState();
     } catch (err) {
       console.error(err);
     }
   };
 
+  const getDisplayedPassageText = () => {
+    if (!passageText) return '';
+
+    const verseText = passageText.verses?.length
+      ? passageText.verses.map(v => `${v.verse}. ${v.text}`).join('\n')
+      : passageText.text || '';
+
+    return `${passageText.reference} (${passageText.version})\n${verseText}`.trim();
+  };
+
   const copyToClipboard = () => {
     if (passageText) {
-      navigator.clipboard.writeText(`${passageText.reference}\n${passageText.text || passageText.verses?.map(v=>v.text).join(' ')}`);
+      navigator.clipboard.writeText(getDisplayedPassageText());
       alert('Copied to clipboard!');
     }
   };
@@ -205,7 +207,7 @@ const Bible = () => {
     if (navigator.share && passageText) {
       navigator.share({
         title: passageText.reference,
-        text: `Read ${passageText.reference} in the CCFBC App`,
+        text: getDisplayedPassageText(),
         url: window.location.href
       }).catch(console.error);
     } else {
@@ -246,7 +248,7 @@ const Bible = () => {
           <div style={styles.controlsGrid}>
             <div style={{ ...styles.formGroup, flex: 2 }}>
               <label style={styles.label}>Book</label>
-              <select style={styles.select} value={book} onChange={(e) => setBook(e.target.value)}>
+              <select style={styles.select} value={book} onChange={(e) => handleBookSelect(e.target.value)}>
                 {bibleBooks.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
               </select>
             </div>
@@ -309,7 +311,9 @@ const Bible = () => {
               <div style={styles.readerHeader}>
                 <div>
                   <h2 style={styles.passageTitle}>{passageText.reference}</h2>
-                  <span style={styles.versionBadge}>{passageText.version} {passageText.isLocal && '(Offline)'}</span>
+                  <span style={styles.versionBadge}>
+                    {passageText.isLocal ? `${passageText.version} Offline` : passageText.version}
+                  </span>
                 </div>
                 <div style={styles.headerActions}>
                   <button onClick={() => alert("Bookmarked!")} style={styles.iconBtnOnly} title="Bookmark">
@@ -367,8 +371,10 @@ const Bible = () => {
                   {isDownloaded 
                     ? 'Available offline on this device.' 
                     : currentVersionConfig?.canDownload 
-                      ? 'Download for offline reading even without internet.' 
-                      : 'Licensed access required for offline download.'}
+                      ? 'Download the full Bible text for reading even without internet.' 
+                      : currentVersionConfig?.copyrightStatus === 'licensed'
+                        ? 'Licensed access required for offline download.'
+                        : 'Offline download is not available for this version yet.'}
                 </p>
               </div>
               
@@ -377,9 +383,12 @@ const Bible = () => {
                   onClick={handleDownload} 
                   disabled={isDownloading}
                   className="btn-large"
-                  style={styles.downloadBtn}
+                  style={{
+                    ...styles.downloadBtn,
+                    ...(isDownloading ? styles.downloadBtnDisabled : {})
+                  }}
                 >
-                  <Download size={18} /> {isDownloading ? 'Downloading...' : 'Download for Offline'}
+                  <Download size={18} /> {isDownloading ? 'Downloading...' : `Download ${version}`}
                 </button>
               )}
               {isDownloaded && (
@@ -388,6 +397,24 @@ const Bible = () => {
                 </div>
               )}
             </div>
+            {isDownloading && downloadProgress && (
+              <div style={styles.progressWrap} aria-live="polite">
+                <div style={styles.progressText}>
+                  <span>{downloadProgress.stage}</span>
+                  {typeof downloadProgress.percent === 'number' && (
+                    <span>{downloadProgress.percent}%</span>
+                  )}
+                </div>
+                <div style={styles.progressTrack}>
+                  <div
+                    style={{
+                      ...styles.progressFill,
+                      width: `${downloadProgress.percent || 8}%`
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {downloadedList.length > 0 && (
@@ -397,7 +424,12 @@ const Bible = () => {
                 <div key={item.id} style={styles.downloadedItem}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Book size={20} color="var(--primary-blue)" />
-                    <span style={{ fontWeight: '700', color: 'var(--text-dark)' }}>{item.id}</span>
+                    <div>
+                      <span style={{ fontWeight: '700', color: 'var(--text-dark)' }}>{item.id}</span>
+                      {item.verseCount && (
+                        <p style={styles.downloadedMeta}>{item.verseCount.toLocaleString()} verses saved</p>
+                      )}
+                    </div>
                   </div>
                   <button 
                     onClick={() => handleRemoveDownload(item.id)}
@@ -495,9 +527,15 @@ const styles = {
   offlineCard: { padding: '1.5rem', marginBottom: '1.5rem' },
   offlineHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' },
   downloadBtn: { background: 'var(--primary-blue)', border: 'none', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '48px' },
+  downloadBtnDisabled: { opacity: 0.75, cursor: 'wait' },
   downloadedBadge: { display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: '800', background: '#dcfce3', padding: '0.6rem 1.2rem', borderRadius: '12px' },
+  progressWrap: { marginTop: '1.25rem' },
+  progressText: { display: 'flex', justifyContent: 'space-between', gap: '1rem', color: '#334155', fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.5rem' },
+  progressTrack: { height: '12px', background: '#dbeafe', borderRadius: '999px', overflow: 'hidden' },
+  progressFill: { height: '100%', background: 'var(--primary-blue)', borderRadius: '999px', transition: 'width 0.2s ease' },
   downloadedListContainer: { background: '#f8fafc', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-light)' },
   downloadedItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-light)', marginBottom: '0.75rem' },
+  downloadedMeta: { margin: '0.15rem 0 0 0', color: '#64748b', fontSize: '0.85rem', fontWeight: '700', lineHeight: 1.3 },
   removeBtn: { background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.6rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 };
 
@@ -511,4 +549,3 @@ if (typeof document !== 'undefined') {
 }
 
 export default Bible;
-

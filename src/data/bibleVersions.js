@@ -20,11 +20,11 @@ export const bibleVersions = [
     language: 'English',
     languageCode: 'en',
     copyrightStatus: 'public-domain',
-    offlineAllowed: true,
-    canDownload: true,
+    offlineAllowed: false,
+    canDownload: false,
     sourceType: 'open-api',
     externalFallbackProvider: 'Bible Gateway',
-    notes: 'Modern English translation in the public domain.'
+    notes: 'Modern English translation in the public domain. Offline package not bundled yet.'
   },
   {
     id: 'ASV',

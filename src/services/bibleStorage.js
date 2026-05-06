@@ -1,6 +1,18 @@
 const DB_NAME = 'CCFBCBibleDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'versions';
+const OFFLINE_SCHEMA_VERSION = 1;
+
+const isStructuredBibleData = (data) => {
+  return Boolean(
+    data &&
+    data.schemaVersion === OFFLINE_SCHEMA_VERSION &&
+    data.version &&
+    data.books &&
+    typeof data.books === 'object' &&
+    !data.mockText
+  );
+};
 
 /**
  * Open the IndexedDB database, creating it if it doesn't exist.
@@ -93,7 +105,7 @@ export const getOfflineVersion = async (versionId) => {
 export const isVersionDownloaded = async (versionId) => {
   try {
     const data = await getOfflineVersion(versionId);
-    return data !== null;
+    return isStructuredBibleData(data);
   } catch {
     return false;
   }
@@ -136,9 +148,10 @@ export const listDownloadedVersions = async () => {
       request.onsuccess = (event) => {
         const results = event.target.result || [];
         // Map to avoid sending the entire huge data objects in the list
-        resolve(results.map(item => ({
+        resolve(results.filter(item => isStructuredBibleData(item.data)).map(item => ({
           id: item.id,
-          downloadedAt: item.downloadedAt
+          downloadedAt: item.downloadedAt,
+          verseCount: item.data?.meta?.verseCount
         })));
       };
       request.onerror = (event) => reject(event.target.error);

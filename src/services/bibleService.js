@@ -1,4 +1,5 @@
 import { bibleVersions } from '../data/bibleVersions';
+import { bibleBooks } from '../data/bibleBooks';
 import { 
   getOfflineVersion, 
   saveVersionToOffline, 
@@ -9,7 +10,210 @@ import {
 
 const BASE_URL = import.meta.env.VITE_BIBLE_API_BASE_URL || 'https://bible-api.com';
 const API_KEY = import.meta.env.VITE_BIBLE_API_KEY;
-const PROVIDER = import.meta.env.VITE_BIBLE_API_PROVIDER; // e.g. 'bible-api'
+const OFFLINE_SCHEMA_VERSION = 1;
+
+const OFFLINE_DOWNLOAD_SOURCES = {
+  KJV: {
+    url: 'https://raw.githubusercontent.com/bibleapi/bibleapi-bibles-json/master/kjv.json',
+    format: 'bibleapi-resultset'
+  },
+  ASV: {
+    url: 'https://raw.githubusercontent.com/bibleapi/bibleapi-bibles-json/master/asv.json',
+    format: 'bibleapi-resultset'
+  }
+};
+
+const BOOK_ALIASES = {
+  Psalms: ['Psalm', 'Ps'],
+  'Song of Solomon': ['Song of Songs', 'Song', 'Canticles'],
+  Revelation: ['Revelations', 'Rev']
+};
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const getBookAliases = (bookName) => {
+  const aliases = [bookName, ...(BOOK_ALIASES[bookName] || [])];
+  return aliases.flatMap(alias => {
+    if (/^\d\s/.test(alias)) {
+      return [alias, alias.replace(/\s+/, '')];
+    }
+    return [alias];
+  });
+};
+
+const parseReference = (reference) => {
+  const cleanedReference = String(reference || '').trim();
+  const bookCandidates = bibleBooks
+    .flatMap(bookItem => getBookAliases(bookItem.name).map(alias => ({
+      alias,
+      bookName: bookItem.name
+    })))
+    .sort((a, b) => b.alias.length - a.alias.length);
+
+  for (const candidate of bookCandidates) {
+    const aliasPattern = escapeRegExp(candidate.alias).replace(/\\ /g, '\\s*');
+    const match = cleanedReference.match(
+      new RegExp(`^${aliasPattern}\\s+(\\d+)(?::(\\d+)(?:-(\\d+))?)?`, 'i')
+    );
+
+    if (match) {
+      return {
+        bookName: candidate.bookName,
+        chapter: Number(match[1]),
+        verseStart: match[2] ? Number(match[2]) : null,
+        verseEnd: match[3] ? Number(match[3]) : null
+      };
+    }
+  }
+
+  return null;
+};
+
+const isStructuredBibleData = (data) => {
+  return Boolean(
+    data &&
+    data.schemaVersion === OFFLINE_SCHEMA_VERSION &&
+    data.version &&
+    data.books &&
+    typeof data.books === 'object' &&
+    !data.mockText
+  );
+};
+
+const getLocalPassage = (reference, versionId, localData) => {
+  if (!isStructuredBibleData(localData)) {
+    throw new Error(`${versionId} is not available offline yet. Please download it first.`);
+  }
+
+  const parsedReference = parseReference(reference);
+  if (!parsedReference) {
+    throw new Error(`Could not read "${reference}" from offline Bible data.`);
+  }
+
+  const chapterVerses = localData.books?.[parsedReference.bookName]?.[String(parsedReference.chapter)];
+  if (!chapterVerses || chapterVerses.length === 0) {
+    throw new Error(`${parsedReference.bookName} ${parsedReference.chapter} was not found in the downloaded ${versionId} Bible.`);
+  }
+
+  const selectedVerses = parsedReference.verseStart
+    ? chapterVerses.filter(item => {
+      const verseEnd = parsedReference.verseEnd || parsedReference.verseStart;
+      return item.verse >= parsedReference.verseStart && item.verse <= verseEnd;
+    })
+    : chapterVerses;
+
+  if (selectedVerses.length === 0) {
+    throw new Error(`${reference} was not found in the downloaded ${versionId} Bible.`);
+  }
+
+  const normalizedReference = parsedReference.verseStart
+    ? `${parsedReference.bookName} ${parsedReference.chapter}:${parsedReference.verseStart}${parsedReference.verseEnd ? `-${parsedReference.verseEnd}` : ''}`
+    : `${parsedReference.bookName} ${parsedReference.chapter}`;
+
+  return {
+    reference: normalizedReference,
+    text: selectedVerses.map(item => item.text).join(' '),
+    version: versionId,
+    isLocal: true,
+    verses: selectedVerses.map(item => ({
+      book_name: parsedReference.bookName,
+      chapter: parsedReference.chapter,
+      verse: item.verse,
+      text: item.text
+    }))
+  };
+};
+
+const normalizeBibleApiResultset = (versionId, data, onProgress) => {
+  const rows = data?.resultset?.row;
+  if (!Array.isArray(rows) || rows.length === 0) {
+    throw new Error(`The downloaded ${versionId} Bible data was not in the expected format.`);
+  }
+
+  const books = {};
+  let verseCount = 0;
+
+  rows.forEach((row, index) => {
+    const field = row?.field;
+    if (!Array.isArray(field) || field.length < 5) return;
+
+    const [, bookNumber, chapterNumber, verseNumber, verseText] = field;
+    const bookName = bibleBooks[Number(bookNumber) - 1]?.name;
+    if (!bookName || !chapterNumber || !verseNumber || !verseText) return;
+
+    const chapterKey = String(chapterNumber);
+    if (!books[bookName]) books[bookName] = {};
+    if (!books[bookName][chapterKey]) books[bookName][chapterKey] = [];
+
+    books[bookName][chapterKey].push({
+      verse: Number(verseNumber),
+      text: String(verseText).trim()
+    });
+    verseCount += 1;
+
+    if (onProgress && index % 1000 === 0) {
+      onProgress({
+        stage: 'Preparing Bible text...',
+        percent: 85 + Math.min(14, Math.round((index / rows.length) * 14))
+      });
+    }
+  });
+
+  if (!books.Matthew?.['1']?.length) {
+    throw new Error(`The downloaded ${versionId} Bible data did not include Matthew 1.`);
+  }
+
+  return {
+    schemaVersion: OFFLINE_SCHEMA_VERSION,
+    version: versionId,
+    books,
+    meta: {
+      source: 'bibleapi/bibleapi-bibles-json',
+      verseCount,
+      bookCount: Object.keys(books).length,
+      normalizedAt: new Date().toISOString()
+    }
+  };
+};
+
+const fetchJsonWithProgress = async (url, onProgress) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download Bible text: ${response.statusText}`);
+  }
+
+  const contentLength = Number(response.headers.get('content-length') || 0);
+  if (!response.body || !contentLength) {
+    onProgress?.({ stage: 'Downloading Bible text...', percent: 45 });
+    return response.json();
+  }
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let receivedLength = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    chunks.push(value);
+    receivedLength += value.length;
+
+    onProgress?.({
+      stage: 'Downloading Bible text...',
+      percent: Math.max(5, Math.min(84, Math.round((receivedLength / contentLength) * 84)))
+    });
+  }
+
+  const chunksAll = new Uint8Array(receivedLength);
+  let position = 0;
+  for (const chunk of chunks) {
+    chunksAll.set(chunk, position);
+    position += chunk.length;
+  }
+
+  return JSON.parse(new TextDecoder('utf-8').decode(chunksAll));
+};
 
 /**
  * Get all available languages based on configured versions.
@@ -49,15 +253,7 @@ export const getPassage = async (reference, versionId) => {
   
   if (isDownloaded) {
     const localData = await getOfflineVersion(versionId);
-    // In a real scenario, we'd parse `localData` to extract the exact chapter/verse.
-    // For this implementation, we return a simulated local response.
-    return {
-      reference,
-      text: localData?.mockText || `[Offline Data for ${versionId} - ${reference}]`,
-      version: versionId,
-      isLocal: true,
-      verses: []
-    };
+    return getLocalPassage(reference, versionId, localData);
   }
 
   // If no internet, and not downloaded, throw an error
@@ -114,13 +310,19 @@ export const searchBible = async (query, versionId) => {
 
 /**
  * Download a full version for offline use.
- * @param {string} versionId 
+ * @param {string} versionId
+ * @param {(progress: {stage: string, percent?: number}) => void} onProgress
  */
-export const downloadVersion = async (versionId) => {
+export const downloadVersion = async (versionId, onProgress) => {
   const version = bibleVersions.find(v => v.id === versionId);
   
   if (!version || !version.canDownload) {
     throw new Error('This version cannot be downloaded for offline use.');
+  }
+
+  const downloadSource = OFFLINE_DOWNLOAD_SOURCES[versionId];
+  if (!downloadSource) {
+    throw new Error(`Offline download is not configured for ${versionId} yet.`);
   }
 
   if (!navigator.onLine) {
@@ -128,19 +330,19 @@ export const downloadVersion = async (versionId) => {
   }
 
   try {
-    // In a real application, you would download a large JSON structure containing the full text.
-    // E.g., const res = await fetch(`${BASE_URL}/downloads/${versionId}.json`);
-    // const fullData = await res.json();
-    
-    // Simulating a download delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const mockFullData = {
-      version: versionId,
-      mockText: `This is the offline downloaded text for the entire ${versionId} Bible. Local parsing is enabled.`
-    };
+    onProgress?.({ stage: 'Starting download...', percent: 1 });
+    const rawData = await fetchJsonWithProgress(downloadSource.url, onProgress);
+    const fullData = normalizeBibleApiResultset(versionId, rawData, onProgress);
 
-    await saveVersionToOffline(versionId, mockFullData);
+    onProgress?.({ stage: 'Saving for offline use...', percent: 99 });
+    await saveVersionToOffline(versionId, {
+      ...fullData,
+      meta: {
+        ...fullData.meta,
+        sourceUrl: downloadSource.url
+      }
+    });
+    onProgress?.({ stage: 'Downloaded', percent: 100 });
   } catch (error) {
     console.error('Error downloading version:', error);
     throw error;
