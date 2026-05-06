@@ -42,7 +42,9 @@ const getBookAliases = (bookName) => {
 };
 
 const parseReference = (reference) => {
-  const cleanedReference = String(reference || '').trim();
+  const cleanedReference = String(reference || '')
+    .replace(/\(([^)]+)\)\s*$/g, '')
+    .trim();
   const bookCandidates = bibleBooks
     .flatMap(bookItem => getBookAliases(bookItem.name).map(alias => ({
       alias,
@@ -59,14 +61,56 @@ const parseReference = (reference) => {
     if (match) {
       return {
         bookName: candidate.bookName,
+        book: candidate.bookName,
         chapter: Number(match[1]),
         verseStart: match[2] ? Number(match[2]) : null,
-        verseEnd: match[3] ? Number(match[3]) : null
+        verseEnd: match[3] ? Number(match[3]) : match[2] ? Number(match[2]) : null
       };
     }
   }
 
   return null;
+};
+
+export const parseScriptureReference = (reference) => {
+  const parsed = parseReference(reference);
+  if (!parsed) return null;
+
+  const bookConfig = bibleBooks.find(item => item.name === parsed.bookName);
+  if (!bookConfig || parsed.chapter < 1 || parsed.chapter > bookConfig.chapters) {
+    return null;
+  }
+
+  return {
+    book: parsed.bookName,
+    chapter: parsed.chapter,
+    startVerse: parsed.verseStart,
+    endVerse: parsed.verseEnd,
+    reference: parsed.verseStart
+      ? `${parsed.bookName} ${parsed.chapter}:${parsed.verseStart}${parsed.verseEnd && parsed.verseEnd !== parsed.verseStart ? `-${parsed.verseEnd}` : ''}`
+      : `${parsed.bookName} ${parsed.chapter}`
+  };
+};
+
+export const isInternalBibleVersionSupported = (versionId) => {
+  const version = bibleVersions.find(item => item.id === versionId);
+  return Boolean(version && version.sourceType === 'open-api');
+};
+
+export const getInternalBibleUrl = (reference, versionId) => {
+  const parsed = parseScriptureReference(reference);
+  if (!parsed || !isInternalBibleVersionSupported(versionId)) return null;
+
+  const params = new URLSearchParams({
+    version: versionId,
+    book: parsed.book,
+    chapter: String(parsed.chapter)
+  });
+
+  if (parsed.startVerse) params.set('startVerse', String(parsed.startVerse));
+  if (parsed.endVerse) params.set('endVerse', String(parsed.endVerse));
+
+  return `/bible?${params.toString()}`;
 };
 
 const isStructuredBibleData = (data) => {
@@ -107,7 +151,7 @@ const getLocalPassage = (reference, versionId, localData) => {
   }
 
   const normalizedReference = parsedReference.verseStart
-    ? `${parsedReference.bookName} ${parsedReference.chapter}:${parsedReference.verseStart}${parsedReference.verseEnd ? `-${parsedReference.verseEnd}` : ''}`
+    ? `${parsedReference.bookName} ${parsedReference.chapter}:${parsedReference.verseStart}${parsedReference.verseEnd && parsedReference.verseEnd !== parsedReference.verseStart ? `-${parsedReference.verseEnd}` : ''}`
     : `${parsedReference.bookName} ${parsedReference.chapter}`;
 
   return {

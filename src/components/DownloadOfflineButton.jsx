@@ -8,9 +8,15 @@ const DownloadOfflineButton = ({ message, variant = 'large' }) => {
   const isOffline = useOffline();
   const [toast, setToast] = useState(null);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState('idle');
 
   const messageId = message?.id;
   const downloaded = isDownloaded(messageId);
+  const displayStatus = status === 'downloading' || status === 'error'
+    ? status
+    : downloaded
+      ? 'downloaded'
+      : 'idle';
 
   useEffect(() => {
     if (toast) {
@@ -21,33 +27,51 @@ const DownloadOfflineButton = ({ message, variant = 'large' }) => {
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
+      const timer = setTimeout(() => {
+        setError(null);
+        setStatus(downloaded ? 'downloaded' : 'idle');
+      }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [error]);
+  }, [downloaded, error]);
 
-  const handleToggle = () => {
-    if (!messageId) return;
+  const handleToggle = async () => {
+    setError(null);
+    setToast(null);
+
+    if (!messageId || !message) {
+      setStatus('error');
+      setError('This message could not be prepared for offline reading.');
+      return;
+    }
 
     if (downloaded) {
       if (window.confirm('Remove this message from offline reading?')) {
+        setStatus('downloading');
         const success = removeMessageOffline(messageId);
         if (success) {
+          setStatus('idle');
           setToast('Removed from offline reading.');
         } else {
+          setStatus('error');
           setError('Failed to remove message.');
         }
       }
     } else {
       if (isOffline) {
-        setToast('Please connect to the internet to download.');
+        setStatus('error');
+        setError('Please connect to the internet to download this message.');
         return;
       }
 
+      setStatus('downloading');
+      await new Promise(resolve => window.setTimeout(resolve, 120));
       const success = saveMessageOffline(message);
       if (success) {
+        setStatus('downloaded');
         setToast('Saved for offline reading.');
       } else {
+        setStatus('error');
         setError('Failed to save message. Storage might be full.');
       }
     }
@@ -57,9 +81,11 @@ const DownloadOfflineButton = ({ message, variant = 'large' }) => {
     return (
       <div style={{ position: 'relative' }}>
         <button 
+          type="button"
           onClick={(e) => { e.preventDefault(); handleToggle(); }}
           style={downloaded ? styles.iconBtnActive : styles.iconBtn}
           title={downloaded ? 'Remove Offline' : 'Download for Offline'}
+          disabled={displayStatus === 'downloading'}
         >
           {downloaded ? <Check size={20} /> : <Download size={20} />}
         </button>
@@ -72,15 +98,22 @@ const DownloadOfflineButton = ({ message, variant = 'large' }) => {
   return (
     <div style={styles.container}>
       <button 
+        type="button"
         onClick={handleToggle}
         style={{
           ...styles.btn,
           ...(downloaded ? styles.btnActive : styles.btnInactive),
-          opacity: isOffline && !downloaded ? 0.5 : 1,
+          ...(displayStatus === 'error' ? styles.btnError : {}),
+          opacity: (isOffline && !downloaded) || displayStatus === 'downloading' ? 0.65 : 1,
         }}
-        disabled={isOffline && !downloaded}
+        disabled={(isOffline && !downloaded) || displayStatus === 'downloading'}
       >
-        {downloaded ? (
+        {displayStatus === 'downloading' ? (
+          <>
+            <Download size={24} />
+            <span>{downloaded ? 'Removing...' : 'Downloading...'}</span>
+          </>
+        ) : displayStatus === 'downloaded' ? (
           <>
             <Check size={24} />
             <span>Saved Offline</span>
@@ -95,8 +128,10 @@ const DownloadOfflineButton = ({ message, variant = 'large' }) => {
       
       {downloaded && !isOffline && (
         <button 
+          type="button"
           onClick={(e) => { e.stopPropagation(); handleToggle(); }} 
           style={styles.removeLink}
+          disabled={displayStatus === 'downloading'}
         >
           <Trash2 size={16} /> Remove from device
         </button>
@@ -152,6 +187,11 @@ const styles = {
     background: '#f0fdf4',
     color: '#166534',
     border: '2px solid #bbf7d0',
+  },
+  btnError: {
+    background: '#fef2f2',
+    color: '#b91c1c',
+    border: '2px solid #fecaca',
   },
   iconBtn: {
     background: 'white',

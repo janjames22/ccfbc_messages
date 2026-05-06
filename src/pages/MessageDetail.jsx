@@ -283,7 +283,7 @@ const MessageDetail = () => {
           )}
 
           <div style={{ marginTop: '2rem', marginBottom: '6rem' }}>
-            <DownloadOfflineButton messageId={message.id} title={message.title} />
+            <DownloadOfflineButton message={message} />
           </div>
         </div>
 

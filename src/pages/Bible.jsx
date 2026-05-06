@@ -12,7 +12,8 @@ import {
   deleteDownloadedVersion, 
   listDownloadedVersions, 
   isVersionDownloaded,
-  requiresLicensedApi
+  requiresLicensedApi,
+  parseScriptureReference
 } from '../services/bibleService';
 import { bibleVersions } from '../data/bibleVersions';
 import { bibleBooks } from '../data/bibleBooks';
@@ -21,26 +22,39 @@ import BibleVersionSelect from '../components/BibleVersionSelect';
 const getInitialBibleSelection = (search) => {
   const params = new URLSearchParams(search);
   const versionParam = params.get('version');
+  const bookParam = params.get('book');
+  const chapterParam = Number(params.get('chapter'));
+  const startVerseParam = Number(params.get('startVerse'));
+  const endVerseParam = Number(params.get('endVerse'));
   const refParam = params.get('reference');
   const selectedVersion = bibleVersions.find(v => v.id === versionParam) || bibleVersions.find(v => v.id === 'KJV') || bibleVersions[0];
-  const match = refParam?.match(/^(\d?\s?[a-zA-Z]+(?:\s+of\s+[a-zA-Z]+)?)\s+(\d+)/);
-  const normalizedBook = match?.[1].trim().toLowerCase();
-  const matchedBook = match
-    ? bibleBooks.find(b => {
-      if (b.name.toLowerCase() === normalizedBook) return true;
-      if (b.name === 'Psalms' && normalizedBook === 'psalm') return true;
-      if (b.name === 'Revelation' && normalizedBook === 'revelations') return true;
-      return false;
-    })
+  const directBook = bibleBooks.find(b => b.name.toLowerCase() === String(bookParam || '').toLowerCase());
+  const directChapter = directBook && chapterParam >= 1 && chapterParam <= directBook.chapters
+    ? chapterParam
     : null;
-  const chapter = matchedBook ? Number(match[2]) : 1;
-  const book = matchedBook?.name || bibleBooks[39].name;
+  const parsedReference = refParam ? parseScriptureReference(refParam) : null;
+  const parsedBook = parsedReference ? bibleBooks.find(b => b.name === parsedReference.book) : null;
+  const fallbackBook = bibleBooks.find(b => b.name === 'Matthew') || bibleBooks[39];
+  const book = directChapter ? directBook.name : parsedBook?.name || fallbackBook.name;
+  const chapter = directChapter || parsedReference?.chapter || 1;
+  const startVerse = Number.isFinite(startVerseParam) && startVerseParam > 0
+    ? startVerseParam
+    : parsedReference?.startVerse || null;
+  const endVerse = Number.isFinite(endVerseParam) && endVerseParam > 0
+    ? endVerseParam
+    : parsedReference?.endVerse || startVerse;
 
   return {
     version: selectedVersion?.id || 'KJV',
     book,
     chapter,
-    reference: `${book} ${chapter}`
+    reference: `${book} ${chapter}`,
+    highlightRange: startVerse
+      ? {
+        startVerse,
+        endVerse: Math.max(endVerse || startVerse, startVerse)
+      }
+      : null
   };
 };
 
@@ -57,6 +71,7 @@ const Bible = () => {
   const [passageText, setPassageText] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [highlightRange, setHighlightRange] = useState(initialSelection.highlightRange);
   
   // Offline State
   const [isDownloaded, setIsDownloaded] = useState(false);
@@ -65,6 +80,7 @@ const Bible = () => {
   const [downloadProgress, setDownloadProgress] = useState(null);
   const isMountedRef = useRef(false);
   const passageRequestIdRef = useRef(0);
+  const highlightedVerseRef = useRef(null);
 
   const currentVersionConfig = bibleVersions.find(v => v.id === version);
   const needsLicense = requiresLicensedApi(version);
@@ -84,6 +100,7 @@ const Bible = () => {
     setError('');
     setPassageText(null);
     setLoading(false);
+    setHighlightRange(null);
   }, []);
 
   const fetchPassageData = useCallback(async (refStr, verId) => {
@@ -133,6 +150,19 @@ const Bible = () => {
     return () => window.clearTimeout(timer);
   }, [fetchPassageData, initialSelection.reference, initialSelection.version]);
 
+  useEffect(() => {
+    if (!passageText || !highlightRange?.startVerse) return;
+
+    const timer = window.setTimeout(() => {
+      highlightedVerseRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [passageText, highlightRange]);
+
   const handleVersionSelect = (id) => {
     if (id === version) return;
     clearCurrentPassage();
@@ -159,11 +189,13 @@ const Bible = () => {
 
   const handleFetchPassage = (e) => {
     if (e) e.preventDefault();
+    setHighlightRange(null);
     const reference = `${book} ${chapter}`;
     fetchPassageData(reference, version);
   };
 
   const handleNextChapter = () => {
+    setHighlightRange(null);
     if (chapter < availableChapters) {
       setChapter(prev => prev + 1);
       fetchPassageData(`${book} ${chapter + 1}`, version);
@@ -180,6 +212,7 @@ const Bible = () => {
   };
 
   const handlePrevChapter = () => {
+    setHighlightRange(null);
     if (chapter > 1) {
       setChapter(prev => prev - 1);
       fetchPassageData(`${book} ${chapter - 1}`, version);
@@ -255,6 +288,11 @@ const Bible = () => {
   const openExternal = () => {
     const reference = passageText ? passageText.reference : `${book} ${chapter}`;
     window.open(getExternalBibleUrl(reference, version), '_blank', 'noopener,noreferrer');
+  };
+
+  const isHighlightedVerse = (verseNumber) => {
+    if (!highlightRange?.startVerse) return false;
+    return verseNumber >= highlightRange.startVerse && verseNumber <= highlightRange.endVerse;
   };
 
   return (
@@ -361,12 +399,22 @@ const Bible = () => {
               
               <div style={styles.passageText}>
                 {passageText.verses && passageText.verses.length > 0 ? (
-                  passageText.verses.map(v => (
-                    <p key={v.verse} style={styles.verseP}>
+                  passageText.verses.map(v => {
+                    const isHighlighted = isHighlightedVerse(v.verse);
+                    return (
+                    <p
+                      key={v.verse}
+                      ref={isHighlighted && v.verse === highlightRange.startVerse ? highlightedVerseRef : null}
+                      style={{
+                        ...styles.verseP,
+                        ...(isHighlighted ? styles.highlightedVerse : {})
+                      }}
+                    >
                       <sup style={styles.verseNum}>{v.verse}</sup> 
                       <span style={styles.verseContent}>{v.text}</span>
                     </p>
-                  ))
+                    );
+                  })
                 ) : (
                   <p style={styles.verseP}><span style={styles.verseContent}>{passageText.text}</span></p>
                 )}
@@ -559,6 +607,7 @@ const styles = {
   versionBadge: { display: 'inline-block', background: 'var(--primary-blue)', color: 'white', padding: '0.3rem 0.75rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '800' },
   passageText: { fontSize: 'clamp(1.15rem, 4vw, 1.35rem)', lineHeight: '1.75', color: '#0f172a', marginBottom: '2rem' },
   verseP: { marginBottom: '1.25rem' },
+  highlightedVerse: { background: '#fef3c7', borderLeft: '5px solid #f59e0b', borderRadius: '12px', padding: '0.75rem 0.85rem' },
   verseNum: { fontWeight: '900', color: '#2563eb', marginRight: '0.4rem', fontSize: '0.75em' },
   verseContent: { color: '#0f172a' },
   readerNav: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '1rem', marginBottom: '2rem' },
