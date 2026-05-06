@@ -94,9 +94,9 @@ export const bibleVersions = [
     notes: 'Philippine Bible Society copyright.'
   },
   {
-    id: 'ABTAG1978',
-    name: 'Ang Biblia 1978',
-    abbreviation: 'ABTAG1978',
+    id: 'ABTAG',
+    name: 'Ang Biblia',
+    abbreviation: 'ABTAG',
     language: 'Tagalog',
     languageCode: 'tl',
     copyrightStatus: 'licensed', // Treated as licensed to be safe

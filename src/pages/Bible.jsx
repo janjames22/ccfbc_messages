@@ -18,6 +18,7 @@ import {
 } from '../services/bibleService';
 import { bibleVersions } from '../data/bibleVersions';
 import { bibleBooks } from '../data/bibleBooks';
+import BibleVersionSelect from '../components/BibleVersionSelect';
 
 const Bible = () => {
   const navigate = useNavigate();
@@ -106,6 +107,12 @@ const Bible = () => {
   const loadDownloadedList = async () => {
     const list = await listDownloadedVersions();
     setDownloadedList(list);
+  };
+
+  const handleVersionSelect = (id) => {
+    setVersion(id);
+    const targetLang = bibleVersions.find(v => v.id === id)?.language;
+    if (targetLang) setLanguage(targetLang);
   };
 
   const fetchPassageData = async (refStr, verId) => {
@@ -229,18 +236,11 @@ const Bible = () => {
         {/* Control Panel */}
         <div className="card-light" style={styles.controlsCard}>
           <div style={styles.controlsGrid}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Language</label>
-              <select style={styles.select} value={language} onChange={(e) => setLanguage(e.target.value)}>
-                {languages.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Version</label>
-              <select style={styles.select} value={version} onChange={(e) => setVersion(e.target.value)}>
-                {versions.map(v => <option key={v.id} value={v.id}>{v.id} - {v.name}</option>)}
-              </select>
-            </div>
+          <BibleVersionSelect 
+            selectedVersionId={version} 
+            onSelect={handleVersionSelect} 
+            downloadedIds={downloadedList.map(item => item.id)} 
+          />
           </div>
           
           <div style={styles.controlsGrid}>
