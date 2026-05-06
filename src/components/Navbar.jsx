@@ -103,19 +103,6 @@ const Navbar = () => {
         </div>
 
         <ul className="mobile-nav-list">
-          {navLinks.map((link) => (
-            <li key={link.path} className="mobile-nav-item">
-              <Link 
-                to={link.path} 
-                onClick={closeMenu}
-                className={`mobile-nav-link ${location.pathname === link.path ? 'active' : ''}`}
-              >
-                {React.cloneElement(link.icon, { size: 28 })}
-                <span>{link.label}</span>
-              </Link>
-            </li>
-          ))}
-          
           {user ? (
             <>
               <li className="mobile-nav-item">

@@ -1,11 +1,13 @@
 :root {
   --bg-dark: #05070d;
-  --bg-navy: #071527;
-  --card: #0b1f36;
-  --card-light: #ffffff;
-  --primary-blue: #0f5fa8;
-  --accent-blue: #1e88e5;
+  --bg-navy: #071a33;
+  --card: #0b1f3a;
+  --card-light: #f8fafc;
+  --primary-blue: #0f5fb4;
+  --accent-blue: #2563eb;
   --light-blue: #70baff;
+  --gold: #d4a017;
+  --gold-light: #f4c542;
   --text: #ffffff;
   --text-dark: #0f172a;
   --text-soft: #f8fafc;
@@ -25,6 +27,8 @@
   --font-xxl: 3.75rem;
 
   --nav-height: 88px;
+  --bottom-nav-height: 0px; /* Will be overridden on mobile */
+  
   --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 12px 24px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.3);
@@ -39,7 +43,7 @@
 
 html, body {
   font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #05070d;
+  background: var(--bg-dark);
   color: var(--text);
   line-height: 1.7;
   overflow-x: hidden;
@@ -50,7 +54,7 @@ html, body {
 
 body {
   font-size: var(--font-base);
-  background: linear-gradient(135deg, #05070d 0%, #071527 45%, #0b2745 100%);
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-navy) 45%, #0b2745 100%);
   background-attachment: fixed;
 }
 
@@ -64,6 +68,7 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   width: 100%;
+  padding-bottom: var(--bottom-nav-height);
 }
 
 main {
@@ -102,34 +107,34 @@ a {
 }
 
 .card {
-  background: rgba(11, 31, 54, 0.95);
-  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(11, 31, 58, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-md);
   transition: var(--transition);
   overflow: hidden;
 }
 
 .card-light {
   background: var(--card-light);
-  border: 2px solid var(--border-light);
-  border-radius: 32px;
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
   box-shadow: var(--shadow-lg);
   transition: var(--transition);
   overflow: hidden;
-  color: var(--text-dark);
+  color: var(--text-dark) !important;
 }
 
 .logo-glow {
-  filter: drop-shadow(0 0 32px rgba(30, 136, 229, 0.6));
+  filter: drop-shadow(0 0 32px rgba(37, 99, 235, 0.6));
 }
 
 .btn-large {
-  min-height: 72px;
+  min-height: 60px;
   padding: 1.25rem 2.5rem;
-  font-size: 1.35rem;
+  font-size: 1.15rem;
   font-weight: 900;
-  border-radius: 24px;
+  border-radius: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -138,7 +143,17 @@ a {
   cursor: pointer;
   border: none;
   transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-large:hover {
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+/* Tap Target Minimum */
+button, a, select, input {
+  min-height: 44px;
 }
 
 @media (max-width: 1024px) {
@@ -156,10 +171,17 @@ a {
     --font-lg: 1.75rem;
     --font-base: 1.15rem;
     --nav-height: 72px;
+    --bottom-nav-height: 80px;
   }
   
   .card, .card-light {
-    border-radius: 24px;
+    border-radius: 18px;
+  }
+  
+  .btn-large {
+    width: 100%;
+    min-height: 54px;
+    padding: 1rem;
   }
 }
 
@@ -262,4 +284,9 @@ a {
 .section-padding {
   padding-top: clamp(2rem, 8vw, 4rem);
   padding-bottom: clamp(2rem, 8vw, 4rem);
+}
+
+/* Reader Card Explicit overrides */
+.reader-text-container p {
+  color: var(--text-dark) !important;
 }

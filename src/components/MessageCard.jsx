@@ -1,9 +1,21 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Calendar, User, ArrowRight, Bookmark } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Calendar, User, ArrowRight, BookOpen } from 'lucide-react';
 import OfflineStatusBadge from './OfflineStatusBadge';
 
 const MessageCard = ({ message }) => {
+  const navigate = useNavigate();
+
+  const handleBibleLink = (e) => {
+    e.preventDefault();
+    if (message.main_verse_reference) {
+      // Pass the reference to the bible page via state or query param
+      // The new Bible page uses book/chapter so it might just open the page for now
+      // until full parsing is supported.
+      navigate(`/bible`);
+    }
+  };
+
   return (
     <div className="card-light" style={styles.card}>
       <div style={styles.content}>
@@ -28,12 +40,13 @@ const MessageCard = ({ message }) => {
         <p style={styles.summary}>{message.summary}</p>
         
         <div style={styles.footer}>
-          <div style={styles.verse}>
-            <Bookmark size={18} color="var(--primary-blue)" />
-            <span>{message.main_verse_reference}</span>
-          </div>
+          {message.main_verse_reference && (
+            <button onClick={handleBibleLink} style={styles.bibleBtn}>
+              <BookOpen size={18} /> {message.main_verse_reference}
+            </button>
+          )}
           <Link to={`/messages/${message.id}`} className="btn-large" style={styles.viewBtn}>
-            View <ArrowRight size={20} />
+            Read Message <ArrowRight size={20} />
           </Link>
         </div>
       </div>
@@ -50,10 +63,10 @@ const styles = {
     boxShadow: 'var(--shadow-md)',
   },
   content: {
-    padding: 'clamp(2rem, 6vw, 3rem)',
+    padding: 'clamp(2rem, 6vw, 2.5rem)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1rem',
     flex: 1,
   },
   metaRow: {
@@ -62,7 +75,7 @@ const styles = {
     alignItems: 'center',
     gap: '1rem',
     flexWrap: 'wrap',
-    marginBottom: '0.75rem',
+    marginBottom: '0.5rem',
   },
   category: {
     background: 'rgba(15, 95, 168, 0.12)',
@@ -83,11 +96,11 @@ const styles = {
     fontWeight: '800',
   },
   title: {
-    fontSize: 'var(--font-md)',
+    fontSize: '1.4rem',
     fontWeight: '900',
     color: 'var(--text-dark)',
     lineHeight: '1.2',
-    margin: '0.5rem 0',
+    margin: 0,
     letterSpacing: '-0.02em',
   },
   speakerRow: {
@@ -96,50 +109,58 @@ const styles = {
     gap: '0.75rem',
     color: 'var(--text-dark)',
     fontWeight: '800',
-    marginBottom: '0.75rem',
+    marginBottom: '0.5rem',
   },
   speaker: {
     fontSize: 'var(--font-sm)',
   },
   summary: {
-    fontSize: 'var(--font-sm)',
+    fontSize: '1.05rem',
     color: 'var(--muted-dark)',
     display: '-webkit-box',
     WebkitLineClamp: 3,
     WebkitBoxOrient: 'vertical',
     overflow: 'hidden',
-    lineHeight: '1.7',
+    lineHeight: '1.6',
     flex: 1,
     marginTop: '0.5rem',
     fontWeight: '600',
   },
   footer: {
-    marginTop: '2rem',
-    paddingTop: '2rem',
+    marginTop: '1.5rem',
+    paddingTop: '1.5rem',
     borderTop: '2px solid var(--border-light)',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: '1.25rem',
-    flexWrap: 'wrap',
+    flexDirection: 'column',
+    gap: '1rem',
   },
-  verse: {
+  bibleBtn: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: '0.75rem',
-    fontWeight: '900',
+    fontWeight: '800',
     color: 'var(--primary-blue)',
-    fontSize: 'var(--font-sm)',
+    background: 'rgba(37, 99, 235, 0.1)',
+    border: '2px solid rgba(37, 99, 235, 0.2)',
+    padding: '0.85rem 1rem',
+    borderRadius: '16px',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    width: '100%',
+    transition: 'var(--transition)',
   },
   viewBtn: {
     background: 'var(--primary-blue)',
     color: 'white',
-    padding: '0.8rem 1.75rem',
-    borderRadius: '20px',
-    minHeight: '60px',
-    fontSize: 'var(--font-sm)',
+    padding: '0.85rem 1rem',
+    borderRadius: '16px',
+    minHeight: '54px',
+    fontSize: '1rem',
     fontWeight: '900',
     boxShadow: '0 8px 20px rgba(15, 95, 168, 0.3)',
+    width: '100%',
+    justifyContent: 'center',
   },
 };
 

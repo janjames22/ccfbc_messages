@@ -4,7 +4,7 @@ import SectionTitle from '../components/SectionTitle';
 import MessageCard from '../components/MessageCard';
 import SearchBar from '../components/SearchBar';
 import { supabase } from '../lib/supabaseClient';
-import { Filter, X, WifiOff } from 'lucide-react';
+import { Filter, X, WifiOff, Library } from 'lucide-react';
 import { useOffline } from '../hooks/useOffline';
 import { useOfflineMessages } from '../hooks/useOfflineMessages';
 import { Check } from 'lucide-react';
@@ -70,10 +70,10 @@ const Messages = () => {
 
       {isOffline && (
         <div className="card-light" style={styles.offlineNotice}>
-          <WifiOff size={24} color="var(--primary-blue)" />
+          <WifiOff size={24} color="#d4a017" />
           <div>
-            <p style={styles.offlineText}>You are offline. Showing downloaded messages only.</p>
-            <p style={styles.offlineSubtext}>Connect to the internet to see all messages.</p>
+            <p style={styles.offlineText}>You are offline.</p>
+            <p style={styles.offlineSubtext}>Showing downloaded messages only. Connect to the internet to see all messages.</p>
           </div>
         </div>
       )}
@@ -94,10 +94,9 @@ const Messages = () => {
                   onClick={() => setSelectedCategory(cat)}
                   style={{
                     ...styles.categoryBtn,
-                    background: selectedCategory === cat ? 'var(--primary-blue)' : 'white',
-                    color: selectedCategory === cat ? 'white' : 'var(--primary-blue)',
+                    background: selectedCategory === cat ? 'var(--primary-blue)' : 'rgba(255,255,255,0.05)',
+                    color: selectedCategory === cat ? 'white' : 'var(--text-soft)',
                     borderColor: selectedCategory === cat ? 'var(--primary-blue)' : 'var(--border-light)',
-                    boxShadow: selectedCategory === cat ? 'var(--shadow-md)' : 'var(--shadow-sm)',
                   }}
                 >
                   {cat === 'Saved Offline' && <Check size={16} style={{ marginRight: '0.5rem' }} />}
@@ -110,7 +109,9 @@ const Messages = () => {
       </div>
 
       {loading ? (
-        <div style={styles.loading}>Loading messages...</div>
+        <div style={styles.loading}>
+          <p>Loading messages...</p>
+        </div>
       ) : filteredMessages.length > 0 ? (
         <div style={styles.grid}>
           {filteredMessages.map(message => (
@@ -118,12 +119,13 @@ const Messages = () => {
           ))}
         </div>
       ) : (
-        <div style={styles.empty}>
-          <X size={48} color="var(--muted)" />
+        <div className="card-light" style={styles.empty}>
+          <Library size={64} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
+          <h3 style={{ color: '#0f172a', margin: 0 }}>No messages found</h3>
           {isOffline ? (
-            <p style={{ maxWidth: '400px' }}>No messages are saved for offline reading yet. Connect to the internet and tap <strong>Download for Offline</strong> on any message.</p>
+            <p style={{ maxWidth: '400px', color: '#64748b' }}>No messages are saved for offline reading yet. Connect to the internet and tap "Download" on any message.</p>
           ) : (
-            <p>No messages found matching your criteria.</p>
+            <p style={{ color: '#64748b' }}>Try adjusting your search or filter criteria.</p>
           )}
           <button onClick={() => { setSearchTerm(''); setSelectedCategory('All'); }} className="btn-large" style={styles.resetBtn}>
             Clear Filters
@@ -136,25 +138,24 @@ const Messages = () => {
 
 const styles = {
   offlineNotice: {
-    padding: '1.5rem 2rem',
+    padding: '1.5rem',
     display: 'flex',
     alignItems: 'center',
     gap: '1.5rem',
     marginBottom: '3rem',
-    background: 'white',
-    border: '1px solid var(--border-light)',
-    borderRadius: '20px',
-    boxShadow: 'var(--shadow-md)',
+    background: '#fefce8',
+    border: '1px solid #fef08a',
   },
   offlineText: {
     fontSize: '1.1rem',
-    fontWeight: '700',
-    color: 'var(--text-dark)',
+    fontWeight: '800',
+    color: '#854d0e',
     marginBottom: '0.25rem',
   },
   offlineSubtext: {
     fontSize: '0.95rem',
-    color: 'var(--muted-dark)',
+    color: '#a16207',
+    fontWeight: '500',
   },
   controls: {
     display: 'flex',
@@ -189,7 +190,6 @@ const styles = {
     borderRadius: '100px',
     fontSize: '1rem',
     fontWeight: '700',
-    color: 'white',
     border: '1px solid transparent',
     transition: 'var(--transition)',
     minHeight: '48px',
@@ -205,22 +205,21 @@ const styles = {
     padding: '5rem',
     color: 'var(--muted)',
     fontSize: '1.5rem',
+    fontWeight: '800',
   },
   empty: {
     textAlign: 'center',
-    padding: '5rem',
+    padding: '4rem 2rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '1.5rem',
-    color: 'var(--muted)',
-    fontSize: '1.2rem',
+    gap: '1rem',
   },
   resetBtn: {
-    background: 'rgba(255, 255, 255, 0.1)',
-    color: 'white',
-    border: '1px solid var(--border)',
-    marginTop: '1rem',
+    background: '#f1f5f9',
+    color: '#0f172a',
+    border: '2px solid #e2e8f0',
+    marginTop: '1.5rem',
   }
 };
 

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
-import SectionTitle from '../components/SectionTitle';
-import { Book, Download, Trash2, ExternalLink, ChevronLeft, ChevronRight, Copy, Share2, Search, WifiOff, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { 
+  Book, Download, Trash2, ExternalLink, ChevronLeft, 
+  Copy, WifiOff, AlertTriangle, CheckCircle2, Globe
+} from 'lucide-react';
 import { 
   getAvailableLanguages, 
   getVersionsByLanguage, 
@@ -14,14 +17,20 @@ import {
   requiresLicensedApi
 } from '../services/bibleService';
 import { bibleVersions } from '../data/bibleVersions';
+import { bibleBooks } from '../data/bibleBooks';
 
 const Bible = () => {
+  const navigate = useNavigate();
+  
   const [languages] = useState(getAvailableLanguages());
   const [language, setLanguage] = useState('English');
   const [versions, setVersions] = useState(getVersionsByLanguage('English'));
   const [version, setVersion] = useState(versions[0]?.id || 'KJV');
   
-  const [reference, setReference] = useState('John 3');
+  const [book, setBook] = useState(bibleBooks[39].name); // Matthew
+  const [chapter, setChapter] = useState(1);
+  const [availableChapters, setAvailableChapters] = useState(28);
+  
   const [passageText, setPassageText] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,6 +52,16 @@ const Bible = () => {
   }, [language]);
 
   useEffect(() => {
+    const selectedBook = bibleBooks.find(b => b.name === book);
+    if (selectedBook) {
+      setAvailableChapters(selectedBook.chapters);
+      if (chapter > selectedBook.chapters) {
+        setChapter(1);
+      }
+    }
+  }, [book]);
+
+  useEffect(() => {
     checkDownloadStatus();
     loadDownloadedList();
   }, [version]);
@@ -59,8 +78,8 @@ const Bible = () => {
 
   const handleFetchPassage = async (e) => {
     if (e) e.preventDefault();
-    if (!reference.trim()) return;
-
+    
+    const reference = `${book} ${chapter}`;
     setLoading(true);
     setError('');
     setPassageText(null);
@@ -104,24 +123,33 @@ const Bible = () => {
   const copyToClipboard = () => {
     if (passageText) {
       navigator.clipboard.writeText(`${passageText.reference}\n${passageText.text}`);
+      alert('Copied to clipboard!');
     }
   };
 
   const openExternal = () => {
+    const reference = `${book} ${chapter}`;
     window.open(getExternalBibleUrl(reference, version), '_blank', 'noopener,noreferrer');
   };
 
   return (
     <PageContainer>
-      <SectionTitle 
-        title="Bible Reader" 
-        subtitle="Read the Word, offline and online." 
-      />
+      {/* Top Header */}
+      <div style={styles.topHeader}>
+        <button onClick={() => navigate('/')} style={styles.backBtn}>
+          <ChevronLeft size={24} /> Home
+        </button>
+        <h1 style={styles.pageTitle}>Bible</h1>
+        <div style={navigator.onLine ? styles.badgeOnline : styles.badgeOffline}>
+          {navigator.onLine ? <Globe size={14} /> : <WifiOff size={14} />}
+          {navigator.onLine ? 'Online' : 'Offline'}
+        </div>
+      </div>
 
       <div style={styles.container}>
-        {/* Controls Section */}
+        {/* Control Panel */}
         <div className="card-light" style={styles.controlsCard}>
-          <div style={styles.row}>
+          <div style={styles.controlsGrid}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Language</label>
               <select style={styles.select} value={language} onChange={(e) => setLanguage(e.target.value)}>
@@ -135,32 +163,37 @@ const Bible = () => {
               </select>
             </div>
           </div>
-
-          <form onSubmit={handleFetchPassage} style={styles.searchRow}>
-            <div style={styles.inputWrapper}>
-              <Search size={20} color="var(--muted-dark)" style={styles.searchIcon} />
-              <input 
-                type="text" 
-                value={reference} 
-                onChange={(e) => setReference(e.target.value)}
-                placeholder="e.g., John 3 or Romans 12:1-2"
-                style={styles.input}
-              />
+          
+          <div style={styles.controlsGrid}>
+            <div style={{ ...styles.formGroup, flex: 2 }}>
+              <label style={styles.label}>Book</label>
+              <select style={styles.select} value={book} onChange={(e) => setBook(e.target.value)}>
+                {bibleBooks.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+              </select>
             </div>
-            <button type="submit" style={styles.readBtn} disabled={loading}>
-              {loading ? 'Loading...' : 'Read'}
-            </button>
-          </form>
+            <div style={{ ...styles.formGroup, flex: 1 }}>
+              <label style={styles.label}>Chapter</label>
+              <select style={styles.select} value={chapter} onChange={(e) => setChapter(Number(e.target.value))}>
+                {Array.from({ length: availableChapters }, (_, i) => i + 1).map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button onClick={handleFetchPassage} style={styles.readBtn} disabled={loading}>
+            {loading ? 'Loading...' : `Read ${book} ${chapter}`}
+          </button>
         </div>
 
         {/* Fallback Message for Licensed API */}
         {needsLicense && !isDownloaded && (
           <div style={styles.warningBanner}>
-            <AlertTriangle size={24} style={{ color: '#ffb84d' }} />
-            <div>
-              <p style={{ fontWeight: '700', marginBottom: '4px' }}>Licensed Version</p>
-              <p style={{ fontSize: '0.9rem', color: 'var(--muted)' }}>
-                This Bible version requires licensed access. You can open it externally for now.
+            <AlertTriangle size={28} style={{ color: '#d4a017' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '800', marginBottom: '4px', color: '#0f172a' }}>Licensed Version Required</p>
+              <p style={{ fontSize: '0.95rem', color: '#334155', lineHeight: '1.4' }}>
+                This Bible version requires licensed access. You can open it securely in an external tab.
               </p>
             </div>
             <button onClick={openExternal} style={styles.externalBtnSmall}>
@@ -180,8 +213,8 @@ const Bible = () => {
 
           {!passageText && !error && !loading && (
             <div style={styles.emptyState}>
-              <Book size={64} style={{ color: 'var(--muted-dark)', marginBottom: '1rem', opacity: 0.5 }} />
-              <h3 style={{ color: 'var(--silver)' }}>Select a passage to start reading</h3>
+              <Book size={64} style={{ color: '#cbd5e1', marginBottom: '1rem' }} />
+              <h3 style={{ color: '#64748b' }}>Select a chapter and click Read</h3>
             </div>
           )}
 
@@ -196,20 +229,21 @@ const Bible = () => {
                 {passageText.verses && passageText.verses.length > 0 ? (
                   passageText.verses.map(v => (
                     <p key={v.verse} style={styles.verseP}>
-                      <sup style={styles.verseNum}>{v.verse}</sup> {v.text}
+                      <sup style={styles.verseNum}>{v.verse}</sup> 
+                      <span style={styles.verseContent}>{v.text}</span>
                     </p>
                   ))
                 ) : (
-                  <p style={styles.verseP}>{passageText.text}</p>
+                  <p style={styles.verseP}><span style={styles.verseContent}>{passageText.text}</span></p>
                 )}
               </div>
 
               <div style={styles.readerActions}>
-                <button onClick={copyToClipboard} style={styles.iconBtn} title="Copy">
+                <button onClick={copyToClipboard} style={styles.iconBtn} title="Copy text">
                   <Copy size={20} /> Copy
                 </button>
                 <button onClick={openExternal} style={styles.iconBtn} title="Open Externally">
-                  <ExternalLink size={20} /> Open
+                  <ExternalLink size={20} /> Open Externally
                 </button>
               </div>
             </div>
@@ -223,13 +257,13 @@ const Bible = () => {
           <div className="card-light" style={styles.offlineCard}>
             <div style={styles.offlineHeader}>
               <div>
-                <h4 style={{ color: 'var(--text-dark)', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{currentVersionConfig?.name} ({version})</h4>
-                <p style={{ color: 'var(--muted-dark)', fontSize: '0.9rem' }}>
+                <h4 style={{ color: 'var(--text-dark)', fontSize: '1.15rem', marginBottom: '0.25rem' }}>{currentVersionConfig?.name} ({version})</h4>
+                <p style={{ color: 'var(--muted-dark)', fontSize: '0.95rem' }}>
                   {isDownloaded 
                     ? 'Available offline on this device.' 
                     : currentVersionConfig?.canDownload 
-                      ? 'Download for offline use.' 
-                      : 'Offline download not supported for this version.'}
+                      ? 'Download for offline reading even without internet.' 
+                      : 'Licensed access required for offline download.'}
                 </p>
               </div>
               
@@ -239,7 +273,7 @@ const Bible = () => {
                   disabled={isDownloading}
                   style={styles.downloadBtn}
                 >
-                  <Download size={18} /> {isDownloading ? 'Downloading...' : 'Download'}
+                  <Download size={18} /> {isDownloading ? 'Downloading...' : 'Download for Offline'}
                 </button>
               )}
               {isDownloaded && (
@@ -257,14 +291,14 @@ const Bible = () => {
                 <div key={item.id} style={styles.downloadedItem}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Book size={20} color="var(--primary-blue)" />
-                    <span style={{ fontWeight: '700', color: 'var(--silver)' }}>{item.id}</span>
+                    <span style={{ fontWeight: '700', color: 'var(--text-dark)' }}>{item.id}</span>
                   </div>
                   <button 
                     onClick={() => handleRemoveDownload(item.id)}
                     style={styles.removeBtn}
                     title="Remove Download"
                   >
-                    <Trash2 size={18} />
+                    <Trash2 size={20} />
                   </button>
                 </div>
               ))}
@@ -277,40 +311,84 @@ const Bible = () => {
 };
 
 const styles = {
+  topHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '2rem',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
+    paddingBottom: '1rem',
+  },
+  backBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--light-blue)',
+    fontWeight: '800',
+    fontSize: '1.1rem',
+    cursor: 'pointer',
+    padding: '0.5rem',
+  },
+  pageTitle: {
+    margin: 0,
+    fontSize: '1.5rem',
+  },
+  badgeOnline: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    background: 'rgba(76, 175, 80, 0.2)',
+    color: '#4caf50',
+    padding: '0.4rem 0.75rem',
+    borderRadius: '100px',
+    fontSize: '0.85rem',
+    fontWeight: '800',
+  },
+  badgeOffline: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    background: 'rgba(255, 184, 77, 0.2)',
+    color: '#ffb84d',
+    padding: '0.4rem 0.75rem',
+    borderRadius: '100px',
+    fontSize: '0.85rem',
+    fontWeight: '800',
+  },
   container: { maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' },
-  controlsCard: { padding: '1.5rem', marginBottom: '1.5rem' },
-  row: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-  formGroup: { flex: 1, minWidth: '150px' },
-  label: { display: 'block', fontSize: '0.85rem', fontWeight: '800', color: 'var(--muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  select: { width: '100%', padding: '0.85rem', borderRadius: '12px', border: '2px solid var(--border-light)', background: 'var(--bg-dark)', color: 'var(--silver)', fontSize: '1rem', outline: 'none' },
-  searchRow: { display: 'flex', gap: '1rem' },
-  inputWrapper: { flex: 1, position: 'relative' },
-  searchIcon: { position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' },
-  input: { width: '100%', background: 'var(--bg-dark)', border: '2px solid var(--border-light)', borderRadius: '12px', padding: '1rem 1rem 1rem 3rem', color: 'white', fontSize: '1.1rem', outline: 'none' },
-  readBtn: { background: 'var(--primary-blue)', color: 'white', padding: '0 2rem', borderRadius: '12px', fontWeight: '800', fontSize: '1rem', cursor: 'pointer', border: 'none' },
-  warningBanner: { display: 'flex', alignItems: 'center', gap: '1rem', background: 'rgba(255, 184, 77, 0.1)', border: '1px solid rgba(255, 184, 77, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '1.5rem' },
-  externalBtnSmall: { marginLeft: 'auto', background: 'white', color: 'var(--bg-dark)', border: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' },
-  readerCard: { padding: '2.5rem', minHeight: '300px', marginBottom: '3rem', position: 'relative' },
+  controlsCard: { padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
+  controlsGrid: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
+  formGroup: { flex: 1, minWidth: '120px' },
+  label: { display: 'block', fontSize: '0.9rem', fontWeight: '800', color: 'var(--muted-dark)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  select: { width: '100%', padding: '0.85rem', borderRadius: '12px', border: '2px solid var(--border-light)', background: '#fff', color: '#0f172a', fontSize: '1.1rem', outline: 'none', fontWeight: '600' },
+  readBtn: { width: '100%', background: 'var(--primary-blue)', color: 'white', padding: '1rem', borderRadius: '12px', fontWeight: '800', fontSize: '1.15rem', cursor: 'pointer', border: 'none', marginTop: '0.5rem' },
+  warningBanner: { display: 'flex', alignItems: 'center', gap: '1.25rem', background: '#fef3c7', border: '1px solid #fde68a', padding: '1.5rem', borderRadius: '20px', marginBottom: '1.5rem' },
+  externalBtnSmall: { background: 'white', color: '#0f172a', border: '2px solid #e2e8f0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flexShrink: 0 },
+  readerCard: { padding: 'clamp(1.5rem, 5vw, 3rem)', minHeight: '300px', marginBottom: '3rem', position: 'relative' },
   emptyState: { height: '100%', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' },
-  errorBanner: { background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.3)', padding: '1rem', borderRadius: '12px', color: '#ff4d4d', display: 'flex', alignItems: 'center', gap: '1rem', fontWeight: '500', marginBottom: '1.5rem' },
+  errorBanner: { background: '#fee2e2', border: '1px solid #fecaca', padding: '1.25rem', borderRadius: '16px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '1rem', fontWeight: '700', marginBottom: '1.5rem' },
   readerContent: { animation: 'fadeIn 0.5s ease' },
-  readerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border-light)', paddingBottom: '1rem', marginBottom: '1.5rem' },
-  passageTitle: { fontSize: '2rem', fontWeight: '800', color: 'var(--text-dark)' },
-  versionBadge: { background: 'var(--primary-blue)', color: 'white', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '800' },
-  passageText: { fontSize: '1.15rem', lineHeight: '1.8', color: 'var(--text-soft)', marginBottom: '2rem' },
-  verseP: { marginBottom: '0.5rem' },
-  verseNum: { fontWeight: '800', color: 'var(--primary-blue)', marginRight: '0.3rem', fontSize: '0.8em' },
-  readerActions: { display: 'flex', gap: '1rem', borderTop: '2px solid var(--border-light)', paddingTop: '1.5rem' },
-  iconBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: '2px solid var(--border-light)', color: 'var(--silver)', padding: '0.75rem 1.25rem', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', transition: 'var(--transition)' },
+  readerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid var(--border-light)', paddingBottom: '1.5rem', marginBottom: '2rem' },
+  passageTitle: { fontSize: 'clamp(2rem, 6vw, 2.75rem)', fontWeight: '900', color: '#0f172a', margin: 0 },
+  versionBadge: { background: 'var(--primary-blue)', color: 'white', padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '1rem', fontWeight: '800' },
+  passageText: { fontSize: 'clamp(1.15rem, 4vw, 1.35rem)', lineHeight: '1.75', color: '#0f172a', marginBottom: '2rem' },
+  verseP: { marginBottom: '1.25rem' },
+  verseNum: { fontWeight: '900', color: '#2563eb', marginRight: '0.4rem', fontSize: '0.75em' },
+  verseContent: { color: '#0f172a' },
+  readerActions: { display: 'flex', gap: '1rem', borderTop: '2px solid var(--border-light)', paddingTop: '1.5rem', flexWrap: 'wrap' },
+  iconBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f8fafc', border: '2px solid #cbd5e1', color: '#334155', padding: '0.75rem 1.25rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', transition: 'var(--transition)' },
   offlineSection: {},
   sectionTitle: { fontSize: '1.25rem', fontWeight: '800', color: 'white', marginBottom: '1rem' },
   offlineCard: { padding: '1.5rem', marginBottom: '1.5rem' },
-  offlineHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' },
-  downloadBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-dark)', border: '2px solid var(--primary-blue)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' },
-  downloadedBadge: { display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4caf50', fontWeight: '800', background: 'rgba(76, 175, 80, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px' },
-  downloadedListContainer: { background: 'rgba(5, 7, 13, 0.5)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-light)' },
-  downloadedItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-dark)', borderRadius: '12px', border: '1px solid var(--border-light)', marginBottom: '0.5rem' },
-  removeBtn: { background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: '0.5rem', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' },
+  offlineHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' },
+  downloadBtn: { display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary-blue)', border: 'none', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '12px', fontWeight: '800', cursor: 'pointer' },
+  downloadedBadge: { display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803d', fontWeight: '800', background: '#dcfce3', padding: '0.6rem 1.2rem', borderRadius: '12px' },
+  downloadedListContainer: { background: '#f8fafc', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-light)' },
+  downloadedItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-light)', marginBottom: '0.75rem' },
+  removeBtn: { background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.6rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 };
 
 export default Bible;
+

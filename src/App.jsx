@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import BottomNav from './components/BottomNav';
 import OfflineBanner from './components/OfflineBanner';
 import ReloadPrompt from './components/ReloadPrompt';
 import Home from './pages/Home';
@@ -61,6 +62,7 @@ function App() {
               <p style={styles.footerSubtitle}>Review, remember, and reflect on the Word of God.</p>
             </div>
           </footer>
+          <BottomNav />
         </div>
       </Router>
     </AuthProvider>
