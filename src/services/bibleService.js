@@ -35,7 +35,7 @@ export const getVersionsByLanguage = (language) => {
 export const requiresLicensedApi = (versionId) => {
   const version = bibleVersions.find(v => v.id === versionId);
   if (!version) return false;
-  return version.sourceType === 'licensed-api-or-external' && !API_KEY;
+  return version.copyrightStatus === 'licensed' && !API_KEY;
 };
 
 /**

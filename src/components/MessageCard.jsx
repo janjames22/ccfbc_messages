@@ -9,10 +9,7 @@ const MessageCard = ({ message }) => {
   const handleBibleLink = (e) => {
     e.preventDefault();
     if (message.main_verse_reference) {
-      // Pass the reference to the bible page via state or query param
-      // The new Bible page uses book/chapter so it might just open the page for now
-      // until full parsing is supported.
-      navigate(`/bible`);
+      navigate(`/bible?reference=${encodeURIComponent(message.main_verse_reference)}&version=KJV`);
     }
   };
 
@@ -41,7 +38,7 @@ const MessageCard = ({ message }) => {
         
         <div style={styles.footer}>
           {message.main_verse_reference && (
-            <button onClick={handleBibleLink} style={styles.bibleBtn}>
+            <button onClick={handleBibleLink} className="btn-large" style={styles.bibleBtn}>
               <BookOpen size={18} /> {message.main_verse_reference}
             </button>
           )}

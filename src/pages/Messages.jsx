@@ -110,16 +110,22 @@ const Messages = () => {
 
       {loading ? (
         <div style={styles.loading}>
-          <p>Loading messages...</p>
+          <div style={styles.spinner}></div>
+          <p style={{ marginTop: '1rem' }}>Loading messages...</p>
         </div>
       ) : filteredMessages.length > 0 ? (
         <div style={styles.grid}>
-          {filteredMessages.map(message => (
-            <MessageCard key={message.id} message={message} />
-          ))}
+          {filteredMessages.map((message, index) => {
+            const delayClass = index < 5 ? `delay-${(index + 1) * 100}` : 'delay-500';
+            return (
+              <div key={message.id} className={`animate-slide-up ${delayClass}`}>
+                <MessageCard message={message} />
+              </div>
+            );
+          })}
         </div>
       ) : (
-        <div className="card-light" style={styles.empty}>
+        <div className="card-light animate-fade-in" style={styles.empty}>
           <Library size={64} color="#cbd5e1" style={{ marginBottom: '1rem' }} />
           <h3 style={{ color: '#0f172a', margin: 0 }}>No messages found</h3>
           {isOffline ? (
@@ -206,7 +212,11 @@ const styles = {
     color: 'var(--muted)',
     fontSize: '1.5rem',
     fontWeight: '800',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
   },
+  spinner: { width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTop: '4px solid var(--primary-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite' },
   empty: {
     textAlign: 'center',
     padding: '4rem 2rem',
