@@ -244,6 +244,18 @@ button, a, select, input {
     grid-template-columns: 110px minmax(0, 1fr) !important;
     align-items: start;
   }
+
+  .event-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .admin-actions-row,
+  .event-admin-actions {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 768px) {
