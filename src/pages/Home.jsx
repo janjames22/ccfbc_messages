@@ -81,7 +81,7 @@ const Home = () => {
             <p style={styles.quickLinkDesc}>Read the Bible.</p>
           </button>
 
-          <button onClick={() => alert("Coming Soon!")} className="card-light btn-large delay-100" style={styles.quickLinkCard}>
+          <button onClick={() => navigate('/prayer')} className="card-light btn-large delay-100" style={styles.quickLinkCard}>
             <div style={{ ...styles.iconCircle, background: 'rgba(76, 175, 80, 0.1)' }}>
               <Users size={32} color="#4caf50" />
             </div>
@@ -89,7 +89,7 @@ const Home = () => {
             <p style={styles.quickLinkDesc}>Submit a request.</p>
           </button>
 
-          <button onClick={() => alert("Coming Soon!")} className="card-light btn-large delay-200" style={styles.quickLinkCard}>
+          <button onClick={() => navigate('/events')} className="card-light btn-large delay-200" style={styles.quickLinkCard}>
             <div style={{ ...styles.iconCircle, background: 'rgba(156, 39, 176, 0.1)' }}>
               <CalendarDays size={32} color="#9c27b0" />
             </div>

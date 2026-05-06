@@ -12,6 +12,8 @@ import AddMessage from './pages/AddMessage';
 import EditMessage from './pages/EditMessage';
 import Bible from './pages/Bible';
 import Login from './pages/Login';
+import Prayer from './pages/Prayer';
+import Events from './pages/Events';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -37,6 +39,8 @@ function App() {
               <Route path="/messages" element={<Messages />} />
               <Route path="/messages/:id" element={<MessageDetail />} />
               <Route path="/bible" element={<Bible />} />
+              <Route path="/prayer" element={<Prayer />} />
+              <Route path="/events" element={<Events />} />
               <Route path="/login" element={<Login />} />
               <Route 
                 path="/messages/add" 

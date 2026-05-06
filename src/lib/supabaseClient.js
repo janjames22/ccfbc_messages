@@ -36,6 +36,8 @@ const mockSupabase = {
 const isValidUrl = supabaseUrl && typeof supabaseUrl === 'string' && supabaseUrl.startsWith('http');
 const isValidKey = supabaseAnonKey && typeof supabaseAnonKey === 'string';
 
+export const isSupabaseConfigured = Boolean(isValidUrl && isValidKey);
+
 export const supabase = (isValidUrl && isValidKey) 
   ? createClient(supabaseUrl, supabaseAnonKey)
   : mockSupabase;
