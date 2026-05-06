@@ -4,7 +4,7 @@ import SectionTitle from '../components/SectionTitle';
 import MessageCard from '../components/MessageCard';
 import SearchBar from '../components/SearchBar';
 import { supabase } from '../lib/supabaseClient';
-import { Filter, X, WifiOff, Library } from 'lucide-react';
+import { Filter, WifiOff, Library } from 'lucide-react';
 import { useOffline } from '../hooks/useOffline';
 import { useOfflineMessages } from '../hooks/useOfflineMessages';
 import { Check } from 'lucide-react';
@@ -87,7 +87,7 @@ const Messages = () => {
               <Filter size={20} color="var(--primary-blue)" />
               <span style={styles.filterLabel}>Filter by Category:</span>
             </div>
-            <div style={styles.categoryList}>
+            <div style={styles.categoryList} className="mobile-filter-scroller">
               {categories.map(cat => (
                 <button 
                   key={cat}
@@ -144,11 +144,11 @@ const Messages = () => {
 
 const styles = {
   offlineNotice: {
-    padding: '1.5rem',
+    padding: 'clamp(1rem, 4vw, 1.5rem)',
     display: 'flex',
     alignItems: 'center',
-    gap: '1.5rem',
-    marginBottom: '3rem',
+    gap: '1rem',
+    marginBottom: '2rem',
     background: '#fefce8',
     border: '1px solid #fef08a',
   },
@@ -166,8 +166,8 @@ const styles = {
   controls: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2.5rem',
-    marginBottom: '4rem',
+    gap: '1rem',
+    marginBottom: '1.75rem',
   },
   filterSection: {
     display: 'flex',
@@ -189,10 +189,10 @@ const styles = {
   categoryList: {
     display: 'flex',
     gap: '0.75rem',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   categoryBtn: {
-    padding: '0.75rem 1.5rem',
+    padding: '0.75rem 1rem',
     borderRadius: '100px',
     fontSize: '1rem',
     fontWeight: '700',
@@ -200,15 +200,17 @@ const styles = {
     transition: 'var(--transition)',
     minHeight: '48px',
     cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    flex: '0 0 auto',
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(280px, 100%, 350px), 1fr))',
-    gap: '2rem',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
+    gap: '1rem',
   },
   loading: {
     textAlign: 'center',
-    padding: '5rem',
+    padding: 'clamp(3rem, 12vw, 5rem) 1rem',
     color: 'var(--muted)',
     fontSize: '1.5rem',
     fontWeight: '800',
@@ -219,7 +221,7 @@ const styles = {
   spinner: { width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTop: '4px solid var(--primary-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite' },
   empty: {
     textAlign: 'center',
-    padding: '4rem 2rem',
+    padding: 'clamp(2.5rem, 12vw, 4rem) 1rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',

@@ -1,19 +1,111 @@
-import React, { useState } from 'react';
-import { Globe, ChevronDown, X, Check, CloudOff, Lock, DownloadCloud } from 'lucide-react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Check, ChevronDown, CloudOff, DownloadCloud, Globe, Lock } from 'lucide-react';
 import { bibleVersions } from '../data/bibleVersions';
 
-const BibleVersionSelect = ({ selectedVersionId, onSelect, downloadedIds = [] }) => {
+const FILTERS = ['All', 'Offline Available', 'English', 'Tagalog'];
+const MENU_GAP = 8;
+const VIEWPORT_PADDING = 12;
+
+const BibleVersionSelect = ({
+  selectedVersionId,
+  value,
+  onSelect,
+  onChange,
+  downloadedIds = [],
+  label = 'Bible Version'
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('All');
+  const [menuPosition, setMenuPosition] = useState(null);
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const menuRef = useRef(null);
+  const selectId = useId();
+  const triggerId = `${selectId}-trigger`;
+  const menuId = `${selectId}-menu`;
 
-  const selectedVersion = bibleVersions.find(v => v.id === selectedVersionId) || bibleVersions[0];
+  const selectedId = selectedVersionId || value || 'KJV';
+  const selectedVersion = bibleVersions.find(v => v.id === selectedId) || bibleVersions[0];
+  const downloadedIdSet = useMemo(() => new Set(downloadedIds), [downloadedIds]);
 
-  const filteredVersions = bibleVersions.filter(v => {
-    if (filter === 'English') return v.language === 'English';
-    if (filter === 'Tagalog') return v.language === 'Tagalog';
-    if (filter === 'Offline Available') return v.offlineAllowed;
-    return true; // 'All'
-  });
+  const filteredVersions = useMemo(() => {
+    return bibleVersions.filter(version => {
+      if (filter === 'English') return version.language === 'English';
+      if (filter === 'Tagalog') return version.language === 'Tagalog';
+      if (filter === 'Offline Available') return version.offlineAllowed;
+      return true;
+    });
+  }, [filter]);
+
+  const updateMenuPosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const availableBelow = viewportHeight - rect.bottom - MENU_GAP - VIEWPORT_PADDING;
+    const availableAbove = rect.top - MENU_GAP - VIEWPORT_PADDING;
+    const placeAbove = availableBelow < 260 && availableAbove > availableBelow;
+    const width = Math.min(rect.width, viewportWidth - VIEWPORT_PADDING * 2);
+    const maxHeight = Math.max(
+      120,
+      Math.min(320, Math.floor(viewportHeight * 0.6), placeAbove ? availableAbove : availableBelow)
+    );
+    const top = placeAbove
+      ? Math.max(VIEWPORT_PADDING, rect.top - MENU_GAP - maxHeight)
+      : Math.min(rect.bottom + MENU_GAP, viewportHeight - maxHeight - VIEWPORT_PADDING);
+
+    setMenuPosition({
+      top,
+      left: Math.min(Math.max(VIEWPORT_PADDING, rect.left), viewportWidth - width - VIEWPORT_PADDING),
+      width,
+      maxHeight
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    updateMenuPosition();
+    const handlePointerDown = (event) => {
+      const target = event.target;
+      if (containerRef.current?.contains(target) || menuRef.current?.contains(target)) {
+        return;
+      }
+      setIsOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [isOpen, updateMenuPosition]);
+
+  const handleToggle = () => {
+    setIsOpen(open => !open);
+  };
+
+  const handleSelect = (id) => {
+    onSelect?.(id);
+    onChange?.(id);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const getStatusBadge = (version) => {
     if (version.copyrightStatus === 'licensed') {
@@ -23,16 +115,15 @@ const BibleVersionSelect = ({ selectedVersionId, onSelect, downloadedIds = [] })
         </span>
       );
     }
-    
-    const isDownloaded = downloadedIds.includes(version.id);
-    if (isDownloaded) {
+
+    if (downloadedIdSet.has(version.id)) {
       return (
         <span style={{ ...styles.badge, ...styles.badgeDownloaded }}>
           <Check size={14} /> Downloaded
         </span>
       );
     }
-    
+
     if (version.offlineAllowed) {
       return (
         <span style={{ ...styles.badge, ...styles.badgeOfflineAvailable }}>
@@ -40,7 +131,7 @@ const BibleVersionSelect = ({ selectedVersionId, onSelect, downloadedIds = [] })
         </span>
       );
     }
-    
+
     return (
       <span style={{ ...styles.badge, ...styles.badgeOnlineOnly }}>
         <CloudOff size={14} /> Online Only
@@ -48,87 +139,106 @@ const BibleVersionSelect = ({ selectedVersionId, onSelect, downloadedIds = [] })
     );
   };
 
-  const handleSelect = (id) => {
-    onSelect(id);
-    setIsOpen(false);
-  };
-
-  return (
-    <>
-      {/* Trigger Button */}
-      <div style={styles.container}>
-        <label style={styles.label}>Bible Version</label>
-        <button 
-          onClick={() => setIsOpen(true)}
-          style={styles.triggerButton}
-          className="btn-large"
-        >
-          <div style={styles.triggerContent}>
-            <Globe size={24} color="var(--primary-blue)" />
-            <div style={styles.triggerTextContainer}>
-              <span style={styles.triggerTitle}>{selectedVersion.name} ({selectedVersion.id})</span>
-              <span style={styles.triggerSub}>{selectedVersion.language}</span>
-            </div>
-          </div>
-          <ChevronDown size={24} color="var(--muted-dark)" />
-        </button>
+  const menu = isOpen && menuPosition ? (
+    <div
+      ref={menuRef}
+      id={menuId}
+      role="listbox"
+      aria-label="Bible versions"
+      style={{
+        ...styles.menu,
+        top: menuPosition.top,
+        left: menuPosition.left,
+        width: menuPosition.width,
+        maxHeight: menuPosition.maxHeight
+      }}
+    >
+      <div style={styles.filterRow}>
+        {FILTERS.map(filterName => (
+          <button
+            key={filterName}
+            type="button"
+            onClick={() => setFilter(filterName)}
+            style={{
+              ...styles.filterPill,
+              ...(filter === filterName ? styles.filterPillActive : {})
+            }}
+          >
+            {filterName}
+          </button>
+        ))}
       </div>
 
-      {/* Modal Overlay */}
-      {isOpen && (
-        <div style={styles.modalOverlay} onClick={() => setIsOpen(false)}>
-          <div style={styles.modalContent} onClick={e => e.stopPropagation()} className="animate-slide-up">
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>Select Bible Version</h2>
-              <button onClick={() => setIsOpen(false)} style={styles.closeBtn}>
-                <X size={28} />
-              </button>
-            </div>
+      <div style={styles.versionList}>
+        {filteredVersions.map(version => {
+          const isSelected = selectedId === version.id;
 
-            {/* Filters */}
-            <div style={styles.filterRow}>
-              {['All', 'Offline Available', 'English', 'Tagalog'].map(f => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  style={{
-                    ...styles.filterPill,
-                    ...(filter === f ? styles.filterPillActive : {})
-                  }}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
+          return (
+            <button
+              key={version.id}
+              type="button"
+              role="option"
+              aria-selected={isSelected}
+              onClick={() => handleSelect(version.id)}
+              style={{
+                ...styles.versionItem,
+                ...(isSelected ? styles.versionItemActive : {})
+              }}
+            >
+              <div style={styles.versionInfo}>
+                <span style={styles.versionName}>{version.id} - {version.name}</span>
+                {getStatusBadge(version)}
+              </div>
+              {isSelected && <Check size={24} color="var(--primary-blue)" />}
+            </button>
+          );
+        })}
 
-            {/* List */}
-            <div style={styles.versionList}>
-              {filteredVersions.map(v => (
-                <button 
-                  key={v.id} 
-                  onClick={() => handleSelect(v.id)}
-                  style={{
-                    ...styles.versionItem,
-                    ...(selectedVersionId === v.id ? styles.versionItemActive : {})
-                  }}
-                >
-                  <div style={styles.versionInfo}>
-                    <span style={styles.versionName}>{v.id} - {v.name}</span>
-                    {getStatusBadge(v)}
-                  </div>
-                  {selectedVersionId === v.id && (
-                    <Check size={24} color="var(--primary-blue)" />
-                  )}
-                </button>
-              ))}
-              {filteredVersions.length === 0 && (
-                <p style={styles.emptyText}>No versions found for this filter.</p>
-              )}
-            </div>
+        {filteredVersions.length === 0 && (
+          <p style={styles.emptyText}>No versions found for this filter.</p>
+        )}
+      </div>
+    </div>
+  ) : null;
+
+  return (
+    <div ref={containerRef} style={styles.container}>
+      <label htmlFor={triggerId} style={styles.label}>{label}</label>
+      <button
+        ref={triggerRef}
+        id={triggerId}
+        type="button"
+        onClick={handleToggle}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        style={{
+          ...styles.triggerButton,
+          ...(isOpen ? styles.triggerButtonOpen : {})
+        }}
+        className="btn-large"
+      >
+        <div style={styles.triggerContent}>
+          <Globe size={24} color="var(--primary-blue)" />
+          <div style={styles.triggerTextContainer}>
+            <span style={styles.triggerTitle}>{selectedVersion.name} ({selectedVersion.id})</span>
+            <span style={styles.triggerSub}>
+              {downloadedIdSet.has(selectedVersion.id) ? 'Available offline' : selectedVersion.language}
+            </span>
           </div>
         </div>
-      )}
-    </>
+        <ChevronDown
+          size={24}
+          color="var(--muted-dark)"
+          style={{
+            ...styles.chevron,
+            ...(isOpen ? styles.chevronOpen : {})
+          }}
+        />
+      </button>
+
+      {typeof document !== 'undefined' ? createPortal(menu, document.body) : null}
+    </div>
   );
 };
 
@@ -138,7 +248,8 @@ const styles = {
     flexDirection: 'column',
     gap: '0.75rem',
     width: '100%',
-    marginBottom: '1.5rem',
+    marginBottom: 0,
+    position: 'relative',
   },
   label: {
     fontSize: '0.9rem',
@@ -154,90 +265,76 @@ const styles = {
     background: 'white',
     border: '2px solid var(--border-light)',
     borderRadius: '16px',
-    padding: '1rem 1.25rem',
+    padding: '1rem',
     width: '100%',
     textAlign: 'left',
     minHeight: '64px',
     cursor: 'pointer',
   },
+  triggerButtonOpen: {
+    borderColor: 'var(--primary-blue)',
+    boxShadow: '0 0 0 4px rgba(15, 95, 180, 0.12)',
+  },
   triggerContent: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1rem',
+    gap: '0.75rem',
+    minWidth: 0,
   },
   triggerTextContainer: {
     display: 'flex',
     flexDirection: 'column',
+    minWidth: 0,
   },
   triggerTitle: {
-    fontSize: '1.15rem',
+    fontSize: '1.05rem',
     fontWeight: '900',
     color: '#0f172a',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'normal',
+    lineHeight: 1.25,
   },
   triggerSub: {
     fontSize: '0.9rem',
     fontWeight: '600',
     color: '#64748b',
   },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(5, 7, 13, 0.85)',
-    backdropFilter: 'blur(10px)',
-    zIndex: 9999,
-    display: 'flex',
-    alignItems: 'flex-end', // Bottom sheet on mobile
+  chevron: {
+    flexShrink: 0,
+    transition: 'transform 0.18s ease',
   },
-  modalContent: {
-    background: '#f8fafc',
-    width: '100%',
-    maxHeight: '90vh',
-    borderTopLeftRadius: '24px',
-    borderTopRightRadius: '24px',
-    padding: '1.5rem',
+  chevronOpen: {
+    transform: 'rotate(180deg)',
+  },
+  menu: {
+    position: 'fixed',
+    zIndex: 10000,
     display: 'flex',
     flexDirection: 'column',
-  },
-  modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-  },
-  modalTitle: {
-    margin: 0,
-    fontSize: '1.5rem',
-    color: '#0f172a',
-  },
-  closeBtn: {
-    background: '#e2e8f0',
-    border: 'none',
-    borderRadius: '50%',
-    width: '40px',
-    height: '40px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#334155',
-    cursor: 'pointer',
+    gap: '0.85rem',
+    background: '#ffffff',
+    border: '2px solid #cbd5e1',
+    borderRadius: '16px',
+    boxShadow: '0 24px 64px rgba(15, 23, 42, 0.32)',
+    padding: '0.875rem',
+    overflowY: 'auto',
+    overscrollBehavior: 'contain',
   },
   filterRow: {
     display: 'flex',
-    gap: '0.75rem',
+    gap: '0.65rem',
     overflowX: 'auto',
-    paddingBottom: '1rem',
-    marginBottom: '1rem',
-    scrollbarWidth: 'none', // Firefox
+    paddingBottom: '0.25rem',
+    scrollbarWidth: 'none',
+    flexShrink: 0,
   },
   filterPill: {
     background: 'white',
     border: '2px solid #cbd5e1',
     color: '#475569',
-    padding: '0.6rem 1.25rem',
-    borderRadius: '100px',
+    padding: '0.55rem 1rem',
+    borderRadius: '999px',
     fontSize: '0.95rem',
     fontWeight: '800',
     whiteSpace: 'nowrap',
@@ -250,11 +347,9 @@ const styles = {
     color: 'white',
   },
   versionList: {
-    overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    paddingBottom: '2rem',
+    gap: '0.75rem',
   },
   versionItem: {
     display: 'flex',
@@ -262,24 +357,26 @@ const styles = {
     alignItems: 'center',
     background: 'white',
     border: '2px solid #e2e8f0',
-    padding: '1.25rem',
-    borderRadius: '16px',
+    padding: '1rem',
+    borderRadius: '12px',
     textAlign: 'left',
     cursor: 'pointer',
-    minHeight: '80px',
+    minHeight: '76px',
     width: '100%',
+    gap: '1rem',
   },
   versionItemActive: {
     borderColor: 'var(--primary-blue)',
-    background: 'rgba(15, 95, 168, 0.03)',
+    background: 'rgba(15, 95, 168, 0.05)',
   },
   versionInfo: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
+    gap: '0.45rem',
+    minWidth: 0,
   },
   versionName: {
-    fontSize: '1.25rem',
+    fontSize: '1.05rem',
     fontWeight: '900',
     color: '#0f172a',
   },
@@ -287,9 +384,9 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.4rem',
-    padding: '0.4rem 0.8rem',
+    padding: '0.4rem 0.7rem',
     borderRadius: '8px',
-    fontSize: '0.85rem',
+    fontSize: '0.82rem',
     fontWeight: '800',
     width: 'fit-content',
   },
@@ -312,9 +409,9 @@ const styles = {
   emptyText: {
     textAlign: 'center',
     color: '#64748b',
-    padding: '2rem',
-    fontSize: '1.1rem',
-  }
+    padding: '1.5rem',
+    fontSize: '1.05rem',
+  },
 };
 
 export default BibleVersionSelect;

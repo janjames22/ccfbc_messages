@@ -4,7 +4,7 @@ import logo from '../assets/logo-ccfbc.jpg';
 const LogoHeader = ({ size = 'medium', className = '' }) => {
   const sizes = {
     small: '32px',
-    navbar: '48px',
+    navbar: 'clamp(36px, 10vw, 48px)',
     medium: 'clamp(80px, 20vw, 120px)',
     large: 'clamp(120px, 30vw, 160px)'
   };

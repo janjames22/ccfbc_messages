@@ -60,7 +60,7 @@ const styles = {
     boxShadow: 'var(--shadow-md)',
   },
   content: {
-    padding: 'clamp(2rem, 6vw, 2.5rem)',
+    padding: 'clamp(1rem, 5vw, 2.5rem)',
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
@@ -93,12 +93,13 @@ const styles = {
     fontWeight: '800',
   },
   title: {
-    fontSize: '1.4rem',
+    fontSize: 'clamp(1.2rem, 5vw, 1.4rem)',
     fontWeight: '900',
     color: 'var(--text-dark)',
     lineHeight: '1.2',
     margin: 0,
-    letterSpacing: '-0.02em',
+    letterSpacing: 0,
+    overflowWrap: 'anywhere',
   },
   speakerRow: {
     display: 'flex',

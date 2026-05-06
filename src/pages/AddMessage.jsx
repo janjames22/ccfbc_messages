@@ -25,7 +25,7 @@ const AddMessage = () => {
 
   const [keyPoints, setKeyPoints] = useState(['']);
   const [questions, setQuestions] = useState(['']);
-  const [relatedVerses, setRelatedVerses] = useState([{ reference: '', text: '', note: '' }]);
+  const [relatedVerses] = useState([{ reference: '', text: '', note: '' }]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,7 +87,7 @@ const AddMessage = () => {
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <div className="card-light" style={styles.formCard}>
-          <div style={styles.formGrid}>
+          <div style={styles.formGrid} className="mobile-form-row">
             <div style={styles.formGroup}>
               <label style={styles.label}>Message Title *</label>
               <input 
@@ -243,26 +243,27 @@ const styles = {
     fontWeight: '800',
     fontSize: 'var(--font-sm)',
   },
-  form: { maxWidth: '900px', margin: '0 auto' },
-  formCard: { padding: 'clamp(2rem, 8vw, 4rem)', boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4)' },
+  form: { width: '100%', maxWidth: '900px', margin: '0 auto', minWidth: 0 },
+  formCard: { padding: 'clamp(1rem, 5vw, 4rem)', boxShadow: '0 32px 64px rgba(0, 0, 0, 0.4)' },
   formGrid: { 
     display: 'grid', 
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-    gap: '2.5rem', 
-    marginBottom: '2.5rem' 
+    gridTemplateColumns: '1fr', 
+    gap: '1.5rem', 
+    marginBottom: '2rem' 
   },
-  formGroup: { marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' },
-  label: { fontSize: 'var(--font-xs)', fontWeight: '900', color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: '1.5px' },
+  formGroup: { marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: 0 },
+  label: { fontSize: 'var(--font-xs)', fontWeight: '900', color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: '0.5px' },
   input: { 
     background: 'white', 
     border: '2px solid var(--border-light)', 
     borderRadius: '20px', 
-    padding: '1.25rem 1.5rem', 
+    padding: '1rem', 
     color: 'var(--text-dark)', 
     fontSize: 'var(--font-base)', 
     fontWeight: '700',
     outline: 'none', 
     width: '100%',
+    minWidth: 0,
     transition: 'var(--transition)',
     boxShadow: 'var(--shadow-sm)',
   },
@@ -270,7 +271,7 @@ const styles = {
     background: 'white', 
     border: '2px solid var(--border-light)', 
     borderRadius: '20px', 
-    padding: '1.5rem', 
+    padding: '1rem', 
     color: 'var(--text-dark)', 
     fontSize: 'var(--font-base)', 
     fontWeight: '600',
@@ -279,20 +280,21 @@ const styles = {
     minHeight: '150px', 
     fontFamily: 'inherit', 
     width: '100%', 
+    minWidth: 0,
     lineHeight: '1.7',
     transition: 'var(--transition)',
     boxShadow: 'var(--shadow-sm)',
   },
-  divider: { height: '3px', background: 'var(--border-light)', margin: '4rem 0' },
-  sectionLabel: { fontSize: 'var(--font-md)', fontWeight: '900', marginBottom: '2.5rem', color: 'var(--text-dark)', letterSpacing: '-0.01em' },
-  arrayRow: { display: 'flex', gap: '1.25rem', marginBottom: '2rem', alignItems: 'center' },
+  divider: { height: '3px', background: 'var(--border-light)', margin: '2.5rem 0' },
+  sectionLabel: { fontSize: 'var(--font-md)', fontWeight: '900', marginBottom: '1.5rem', color: 'var(--text-dark)', letterSpacing: 0 },
+  arrayRow: { display: 'flex', gap: '0.75rem', marginBottom: '1.25rem', alignItems: 'center', width: '100%' },
   iconBtn: { 
     padding: '1rem', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center', 
-    minWidth: '64px', 
-    minHeight: '64px',
+    minWidth: '52px', 
+    minHeight: '52px',
     background: '#fef2f2',
     borderRadius: '16px',
     border: '2px solid #fee2e2',
@@ -307,7 +309,7 @@ const styles = {
     marginTop: '1rem',
     background: 'transparent',
     borderRadius: '20px',
-    minHeight: '72px',
+    minHeight: '60px',
     fontSize: 'var(--font-sm)',
   },
   submitBtn: { 
@@ -316,8 +318,8 @@ const styles = {
     color: 'white', 
     borderRadius: '24px', 
     boxShadow: '0 16px 40px rgba(15, 95, 168, 0.4)', 
-    marginTop: '4rem',
-    minHeight: '80px',
+    marginTop: '2.5rem',
+    minHeight: '64px',
     fontSize: 'var(--font-md)',
     fontWeight: '900',
   },
@@ -325,12 +327,12 @@ const styles = {
     background: '#fef2f2',
     border: '2px solid #ef4444',
     color: '#b91c1c',
-    padding: '2rem',
+    padding: '1rem',
     borderRadius: '24px',
     display: 'flex',
     alignItems: 'center',
     gap: '1.5rem',
-    marginBottom: '3rem',
+    marginBottom: '2rem',
     fontSize: 'var(--font-sm)',
     fontWeight: '800',
     lineHeight: '1.5',

@@ -41,14 +41,14 @@ const styles = {
     bottom: 0,
     left: 0,
     width: '100%',
-    height: 'var(--bottom-nav-height)',
+    minHeight: 'var(--bottom-nav-height)',
     background: 'rgba(5, 7, 13, 0.98)',
     backdropFilter: 'blur(20px)',
     borderTop: '1px solid rgba(255, 255, 255, 0.1)',
     display: 'flex',
     justifyContent: 'space-around',
     alignItems: 'center',
-    padding: '0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom))',
+    padding: '0.45rem 0.5rem calc(0.45rem + env(safe-area-inset-bottom))',
     zIndex: 1000,
     boxShadow: '0 -4px 20px rgba(0,0,0,0.5)'
   },
@@ -58,11 +58,12 @@ const styles = {
     alignItems: 'center',
     gap: '0.25rem',
     textDecoration: 'none',
-    minWidth: '64px',
+    minWidth: 0,
+    flex: 1,
     padding: '0.25rem',
   },
   iconWrapper: {
-    padding: '0.4rem 1rem',
+    padding: '0.35rem 0.75rem',
     borderRadius: '16px',
     transition: 'var(--transition)',
     display: 'flex',
@@ -70,9 +71,10 @@ const styles = {
     justifyContent: 'center',
   },
   label: {
-    fontSize: '0.75rem',
-    letterSpacing: '0.5px',
+    fontSize: '0.72rem',
+    letterSpacing: '0.2px',
     transition: 'var(--transition)',
+    textAlign: 'center',
   }
 };
 

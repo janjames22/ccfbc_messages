@@ -24,7 +24,7 @@ const styles = {
   },
   icon: {
     position: 'absolute',
-    left: '1.75rem',
+    left: '1rem',
     top: '50%',
     transform: 'translateY(-50%)',
     pointerEvents: 'none',
@@ -34,15 +34,15 @@ const styles = {
     width: '100%',
     background: 'white',
     border: '3px solid var(--border-light)',
-    borderRadius: '28px',
-    padding: '1.5rem 1.5rem 1.5rem 4.5rem',
+    borderRadius: '20px',
+    padding: '1rem 1rem 1rem 3.25rem',
     color: 'var(--text-dark)',
     fontSize: 'var(--font-base)',
     fontWeight: '800',
     outline: 'none',
     transition: 'var(--transition)',
     boxShadow: 'var(--shadow-md)',
-    minHeight: '80px',
+    minHeight: '60px',
   },
 };
 

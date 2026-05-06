@@ -57,7 +57,7 @@ const MessageDetail = () => {
         if (fallbackData) {
           setMessage(fallbackData);
         } else {
-          setError('We couldn\'t load this message. It might not be saved for offline reading.');
+          setMessage(null);
         }
       } finally {
         setLoading(false);
@@ -65,7 +65,7 @@ const MessageDetail = () => {
     };
 
     fetchMessage();
-  }, [id]);
+  }, [getOfflineMessage, id, isOffline]);
 
   const handleDelete = async () => {
     if (!window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
@@ -96,7 +96,7 @@ const MessageDetail = () => {
     if (isOffline && !isDownloaded(id)) {
       return (
         <PageContainer>
-          <div style={styles.topBar}>
+          <div style={styles.topBar} className="message-detail-topbar">
             <Link to="/messages" style={styles.backLink}>
               <ArrowLeft size={24} /> <span>Back to Archive</span>
             </Link>
@@ -116,7 +116,7 @@ const MessageDetail = () => {
     }
     return (
       <PageContainer>
-        <div style={styles.topBar}>
+        <div style={styles.topBar} className="message-detail-topbar">
           <Link to="/messages" style={styles.backLink}>
             <ArrowLeft size={24} /> <span>Back to Archive</span>
           </Link>
@@ -135,11 +135,11 @@ const MessageDetail = () => {
 
   return (
     <PageContainer>
-      <div style={styles.topBar}>
+      <div style={styles.topBar} className="message-detail-topbar">
         <Link to="/messages" style={styles.backLink}>
           <ArrowLeft size={24} /> <span>Back to Archive</span>
         </Link>
-        <div style={styles.versionPicker}>
+        <div style={styles.versionPicker} className="message-detail-version-picker">
           <BibleVersionSelect 
             value={selectedVersion} 
             onChange={setSelectedVersion}
@@ -198,7 +198,7 @@ const MessageDetail = () => {
         </div>
       </header>
 
-      <div className="message-content-layout" style={styles.contentGrid}>
+      <div className="message-content-layout message-detail-content-grid" style={styles.contentGrid}>
         <div style={styles.mainContent}>
           <section style={styles.section}>
             <div style={styles.sectionHeader}>
@@ -347,11 +347,12 @@ const styles = {
   },
   topBar: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '3rem',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+    marginBottom: '1.75rem',
     flexWrap: 'wrap',
-    gap: '1.5rem',
+    gap: '1rem',
   },
   backLink: {
     display: 'flex',
@@ -364,9 +365,10 @@ const styles = {
   versionPicker: {
     flexShrink: 0,
     width: '100%',
-    maxWidth: '300px',
+    maxWidth: '100%',
+    minWidth: 0,
   },
-  header: { marginBottom: '4rem' },
+  header: { marginBottom: '2rem' },
   headerCard: {
     padding: 'clamp(1.5rem, 6vw, 4rem)',
   },
@@ -394,21 +396,21 @@ const styles = {
     gap: '0.5rem',
     border: '1px solid var(--border-light)',
   },
-  metaRow: { display: 'flex', gap: '2.5rem', flexWrap: 'wrap', marginTop: '2rem' },
-  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'var(--font-sm)', color: 'var(--text-dark)', fontWeight: '700' },
-  title: { fontSize: 'clamp(2rem, 8vw, var(--font-xxl))', fontWeight: '900', lineHeight: '1.1', color: 'var(--text-dark)', margin: '0.5rem 0' },
+  metaRow: { display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '2rem' },
+  metaItem: { display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'var(--font-sm)', color: 'var(--text-dark)', fontWeight: '700', minWidth: 0 },
+  title: { fontSize: 'clamp(1.75rem, 8vw, var(--font-xxl))', fontWeight: '900', lineHeight: '1.1', color: 'var(--text-dark)', margin: '0.5rem 0', overflowWrap: 'anywhere' },
   contentGrid: { 
     display: 'grid', 
-    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-    gap: '4rem',
+    gridTemplateColumns: '1fr', 
+    gap: '2rem',
   },
   mainContent: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
   },
-  section: { marginBottom: '5rem' },
-  sectionHeader: { display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '2.5rem' },
+  section: { marginBottom: 'clamp(3rem, 10vw, 5rem)' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.75rem', flexWrap: 'wrap' },
   summaryCard: { padding: 'clamp(1.5rem, 5vw, 3rem)' },
   paragraphText: { fontSize: 'var(--font-base)', color: 'var(--text-dark)', lineHeight: '1.8', fontWeight: '500' },
   pointsList: { display: 'flex', flexDirection: 'column', gap: '2rem' },
@@ -432,7 +434,7 @@ const styles = {
   noteParagraph: { fontSize: 'var(--font-base)', color: 'var(--text-dark)', lineHeight: '1.9', marginBottom: '2.5rem', fontWeight: '600' },
   questionsCard: { padding: 'clamp(2rem, 6vw, 4rem)' },
   questionsList: { display: 'flex', flexDirection: 'column', gap: '3rem' },
-  questionItem: { display: 'flex', gap: '2rem', alignItems: 'flex-start' },
+  questionItem: { display: 'flex', gap: '1rem', alignItems: 'flex-start' },
   questionText: { fontSize: 'var(--font-base)', color: 'var(--text-dark)', lineHeight: '1.7', fontWeight: '700' },
   bullet: { width: '16px', height: '16px', borderRadius: '50%', background: 'var(--primary-blue)', marginTop: '0.75rem', flexShrink: 0, boxShadow: '0 0 10px rgba(15, 95, 168, 0.3)' },
   sidebar: {},

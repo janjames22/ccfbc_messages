@@ -64,7 +64,7 @@ const Home = () => {
         <p style={styles.subtitle}>May God bless you today. Review, remember, and reflect on the Word of God.</p>
         
         {/* Quick Access Cards */}
-        <div style={styles.quickLinksGrid}>
+        <div style={styles.quickLinksGrid} className="mobile-actions">
           <button onClick={() => navigate('/messages')} className="card-light btn-large" style={styles.quickLinkCard}>
             <div style={{ ...styles.iconCircle, background: 'rgba(37, 99, 235, 0.1)' }}>
               <Library size={32} color="var(--accent-blue)" />
@@ -97,7 +97,7 @@ const Home = () => {
             <p style={styles.quickLinkDesc}>Church calendar.</p>
           </button>
 
-          <button onClick={() => alert("Coming Soon!")} className="card-light btn-large delay-300" style={styles.quickLinkCard}>
+          <button onClick={() => alert("Coming Soon!")} className="card-light btn-large delay-300" style={{ ...styles.quickLinkCard, ...styles.fullWidthAction }}>
             <div style={{ ...styles.iconCircle, background: 'rgba(158, 158, 158, 0.1)' }}>
               <Info size={32} color="#9e9e9e" />
             </div>
@@ -157,65 +157,71 @@ const Home = () => {
 const styles = {
   hero: {
     textAlign: 'center',
-    padding: 'clamp(2rem, 8vw, 5rem) 0 2rem',
+    padding: '0.5rem 0 1.25rem',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '2rem',
+    gap: '1rem',
   },
   title: {
-    maxWidth: '1000px',
-    fontSize: 'clamp(2.5rem, 8vw, var(--font-xl))',
+    maxWidth: '720px',
+    fontSize: 'clamp(2.15rem, 12vw, var(--font-xxl))',
     fontWeight: '900',
     lineHeight: '1.1',
     margin: '0.5rem 0',
-    padding: '0 1rem',
-    letterSpacing: '-0.03em',
+    padding: '0',
+    letterSpacing: 0,
+    overflowWrap: 'anywhere',
   },
   subtitle: {
-    fontSize: 'clamp(1.15rem, 4vw, var(--font-sm))',
+    fontSize: 'var(--font-base)',
     color: 'var(--text-soft)',
     maxWidth: '700px',
-    lineHeight: '1.7',
-    padding: '0 1.5rem',
+    lineHeight: '1.55',
+    padding: 0,
     fontWeight: '500',
     opacity: 0.9,
   },
   quickLinksGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '1rem',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '0.875rem',
     width: '100%',
-    padding: '1.5rem 0',
+    padding: '0.5rem 0',
   },
   quickLinkCard: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '1.5rem',
+    padding: '1rem 0.75rem',
     textAlign: 'center',
     cursor: 'pointer',
     border: '1px solid var(--border-light)',
     textDecoration: 'none',
     width: '100%',
+    minHeight: '132px',
+    justifyContent: 'flex-start',
+  },
+  fullWidthAction: {
+    gridColumn: '1 / -1',
   },
   iconCircle: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '16px',
+    width: '48px',
+    height: '48px',
+    borderRadius: '14px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '1rem',
+    marginBottom: '0.25rem',
   },
   quickLinkTitle: {
-    fontSize: '1.25rem',
+    fontSize: '1.05rem',
     fontWeight: '900',
     color: '#0f172a',
     margin: '0 0 0.25rem 0',
   },
   quickLinkDesc: {
-    fontSize: '0.95rem',
+    fontSize: '0.9rem',
     color: '#475569',
     margin: 0,
     lineHeight: '1.4',
@@ -224,7 +230,7 @@ const styles = {
   votdCard: {
     background: '#fefce8', // very light yellow/gold tint
     borderColor: '#fef08a',
-    padding: 'clamp(2rem, 5vw, 3rem)',
+    padding: '1.25rem',
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
@@ -265,14 +271,14 @@ const styles = {
     fontWeight: '600',
   },
   section: {
-    marginTop: 'clamp(3rem, 8vw, 5rem)',
-    marginBottom: '4rem',
+    marginTop: '1.5rem',
+    marginBottom: '2rem',
   },
   sectionHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '2.5rem',
+    marginBottom: '1.25rem',
     flexWrap: 'wrap',
     gap: '1.5rem',
   },
@@ -295,19 +301,19 @@ const styles = {
   },
   loading: {
     textAlign: 'center',
-    padding: '8rem',
+    padding: 'clamp(3rem, 12vw, 8rem) 1rem',
     color: 'var(--muted)',
     fontSize: 'var(--font-md)',
     fontWeight: '800',
   },
   emptyState: {
-    padding: '6rem 3rem',
+    padding: 'clamp(3rem, 12vw, 6rem) 1rem',
     textAlign: 'center',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '3rem',
-    borderRadius: '40px',
+    borderRadius: '24px',
   },
   addFirst: {
     display: 'flex',
@@ -315,11 +321,11 @@ const styles = {
     gap: '1.25rem',
     background: 'var(--primary-blue)',
     color: 'white',
-    padding: '1.5rem 3rem',
+    padding: '1rem 1.25rem',
     borderRadius: '24px',
     fontWeight: '900',
     textDecoration: 'none',
-    fontSize: 'var(--font-md)',
+    fontSize: 'var(--font-sm)',
     boxShadow: '0 12px 32px rgba(15, 95, 168, 0.4)',
   }
 };

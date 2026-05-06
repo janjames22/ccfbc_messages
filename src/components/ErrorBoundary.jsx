@@ -62,7 +62,7 @@ class ErrorBoundary extends React.Component {
               Please try refreshing or returning to the home page.
             </p>
 
-            {process.env.NODE_ENV === 'development' && (
+            {import.meta.env.DEV && (
               <pre style={styles.errorDetail}>
                 {this.state.error && this.state.error.toString()}
               </pre>
@@ -110,14 +110,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
-    padding: '2rem',
+    padding: '1rem',
   },
   container: {
     maxWidth: '600px',
     width: '100%',
     background: 'white',
-    padding: '4rem 3rem',
-    borderRadius: '40px',
+    padding: 'clamp(1.5rem, 8vw, 4rem) clamp(1rem, 6vw, 3rem)',
+    borderRadius: '24px',
     textAlign: 'center',
     boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
     display: 'flex',
@@ -160,10 +160,10 @@ const styles = {
   },
   primaryBtn: {
     flex: 1,
-    minWidth: '240px',
+    minWidth: 0,
     background: 'var(--primary-blue)',
     color: 'white',
-    padding: '1.25rem 2rem',
+    padding: '1rem',
     borderRadius: '20px',
     border: 'none',
     fontWeight: '900',
@@ -177,10 +177,10 @@ const styles = {
   },
   secondaryBtn: {
     flex: 1,
-    minWidth: '240px',
+    minWidth: 0,
     background: 'white',
     color: 'var(--primary-blue)',
-    padding: '1.25rem 2rem',
+    padding: '1rem',
     borderRadius: '20px',
     border: '2px solid var(--border-light)',
     fontWeight: '900',

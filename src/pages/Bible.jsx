@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { 
@@ -63,23 +63,47 @@ const Bible = () => {
   const [downloadedList, setDownloadedList] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(null);
+  const isMountedRef = useRef(false);
+  const passageRequestIdRef = useRef(0);
 
   const currentVersionConfig = bibleVersions.find(v => v.id === version);
   const needsLicense = requiresLicensedApi(version);
   const availableChapters = bibleBooks.find(b => b.name === book)?.chapters || 1;
 
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      passageRequestIdRef.current += 1;
+    };
+  }, []);
+
+  const clearCurrentPassage = useCallback(() => {
+    passageRequestIdRef.current += 1;
+    setError('');
+    setPassageText(null);
+    setLoading(false);
+  }, []);
+
   const fetchPassageData = useCallback(async (refStr, verId) => {
+    const requestId = passageRequestIdRef.current + 1;
+    passageRequestIdRef.current = requestId;
     setLoading(true);
     setError('');
     setPassageText(null);
 
     try {
       const data = await getPassage(refStr, verId);
+      if (!isMountedRef.current || requestId !== passageRequestIdRef.current) return;
       setPassageText(data);
     } catch (err) {
+      if (!isMountedRef.current || requestId !== passageRequestIdRef.current) return;
       setError(err.message || 'Failed to load passage. Please check your connection or try again.');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && requestId === passageRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -88,6 +112,7 @@ const Bible = () => {
       isVersionDownloaded(version),
       listDownloadedVersions()
     ]);
+    if (!isMountedRef.current) return;
     setIsDownloaded(downloaded);
     setDownloadedList(list);
   }, [version]);
@@ -109,15 +134,27 @@ const Bible = () => {
   }, [fetchPassageData, initialSelection.reference, initialSelection.version]);
 
   const handleVersionSelect = (id) => {
+    if (id === version) return;
+    clearCurrentPassage();
     setVersion(id);
   };
 
   const handleBookSelect = (nextBookName) => {
     const nextBook = bibleBooks.find(b => b.name === nextBookName);
+    if (nextBookName !== book) {
+      clearCurrentPassage();
+    }
     setBook(nextBookName);
     if (nextBook && chapter > nextBook.chapters) {
       setChapter(1);
     }
+  };
+
+  const handleChapterSelect = (nextChapter) => {
+    if (nextChapter !== chapter) {
+      clearCurrentPassage();
+    }
+    setChapter(nextChapter);
   };
 
   const handleFetchPassage = (e) => {
@@ -237,7 +274,7 @@ const Bible = () => {
       <div style={styles.container} className="animate-slide-up delay-100">
         {/* Control Panel */}
         <div className="card-light" style={styles.controlsCard}>
-          <div style={styles.controlsGrid}>
+          <div style={styles.versionControl}>
           <BibleVersionSelect 
             selectedVersionId={version} 
             onSelect={handleVersionSelect} 
@@ -245,7 +282,7 @@ const Bible = () => {
           />
           </div>
           
-          <div style={styles.controlsGrid}>
+          <div style={styles.bookChapterGrid} className="bible-book-chapter-grid">
             <div style={{ ...styles.formGroup, flex: 2 }}>
               <label style={styles.label}>Book</label>
               <select style={styles.select} value={book} onChange={(e) => handleBookSelect(e.target.value)}>
@@ -254,7 +291,7 @@ const Bible = () => {
             </div>
             <div style={{ ...styles.formGroup, flex: 1 }}>
               <label style={styles.label}>Chapter</label>
-              <select style={styles.select} value={chapter} onChange={(e) => setChapter(Number(e.target.value))}>
+              <select style={styles.select} value={chapter} onChange={(e) => handleChapterSelect(Number(e.target.value))}>
                 {Array.from({ length: availableChapters }, (_, i) => i + 1).map(c => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -456,6 +493,8 @@ const styles = {
     marginBottom: '2rem',
     borderBottom: '1px solid rgba(255,255,255,0.1)',
     paddingBottom: '1rem',
+    gap: '0.75rem',
+    flexWrap: 'wrap',
   },
   backBtn: {
     display: 'flex',
@@ -472,6 +511,8 @@ const styles = {
   pageTitle: {
     margin: 0,
     fontSize: '1.5rem',
+    flex: '1 1 auto',
+    textAlign: 'center',
   },
   badgeOnline: {
     display: 'flex',
@@ -495,21 +536,23 @@ const styles = {
     fontSize: '0.85rem',
     fontWeight: '800',
   },
-  container: { maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' },
-  controlsCard: { padding: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-  controlsGrid: { display: 'flex', gap: '1rem', flexWrap: 'wrap' },
-  formGroup: { flex: 1, minWidth: '120px' },
+  container: { width: '100%', maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem', minWidth: 0 },
+  controlsCard: { padding: 'clamp(1rem, 4vw, 1.5rem)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'visible' },
+  controlsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: '1rem', width: '100%' },
+  versionControl: { width: '100%' },
+  bookChapterGrid: { display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', width: '100%' },
+  formGroup: { flex: 1, minWidth: 0, width: '100%' },
   label: { display: 'block', fontSize: '0.9rem', fontWeight: '800', color: 'var(--muted-dark)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.5px' },
   select: { width: '100%', padding: '0.85rem', borderRadius: '12px', border: '2px solid var(--border-light)', background: '#fff', color: '#0f172a', fontSize: '1.1rem', outline: 'none', fontWeight: '600' },
   readBtn: { width: '100%', background: 'var(--primary-blue)', color: 'white', padding: '1rem', borderRadius: '12px', fontWeight: '800', fontSize: '1.15rem', cursor: 'pointer', border: 'none', marginTop: '0.5rem', minHeight: '54px' },
-  warningBanner: { display: 'flex', alignItems: 'center', gap: '1.25rem', background: '#fef3c7', border: '1px solid #fde68a', padding: '1.5rem', borderRadius: '20px', marginBottom: '1.5rem' },
+  warningBanner: { display: 'flex', alignItems: 'center', gap: '1rem', background: '#fef3c7', border: '1px solid #fde68a', padding: 'clamp(1rem, 4vw, 1.5rem)', borderRadius: '20px', marginBottom: '1.5rem', flexWrap: 'wrap' },
   externalBtnSmall: { background: 'white', color: '#0f172a', border: '2px solid #e2e8f0', padding: '0.6rem 1rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', flexShrink: 0, minHeight: '44px' },
-  readerCard: { padding: 'clamp(1.5rem, 5vw, 3rem)', minHeight: '300px', marginBottom: '3rem', position: 'relative' },
+  readerCard: { padding: 'clamp(1rem, 5vw, 3rem)', minHeight: '300px', marginBottom: '3rem', position: 'relative' },
   emptyState: { height: '100%', minHeight: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' },
   spinner: { width: '40px', height: '40px', border: '4px solid #e2e8f0', borderTop: '4px solid var(--primary-blue)', borderRadius: '50%', animation: 'spin 1s linear infinite' },
   errorBanner: { background: '#fee2e2', border: '1px solid #fecaca', padding: '1.25rem', borderRadius: '16px', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '1rem', fontWeight: '700', marginBottom: '1.5rem' },
   readerContent: { width: '100%' },
-  readerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--border-light)', paddingBottom: '1.5rem', marginBottom: '2rem' },
+  readerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid var(--border-light)', paddingBottom: '1.5rem', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' },
   headerActions: { display: 'flex', gap: '0.5rem' },
   iconBtnOnly: { background: 'transparent', border: 'none', color: '#64748b', cursor: 'pointer', padding: '0.5rem', transition: 'var(--transition)' },
   passageTitle: { fontSize: 'clamp(2rem, 6vw, 2.75rem)', fontWeight: '900', color: '#0f172a', margin: '0 0 0.5rem 0' },
@@ -518,13 +561,13 @@ const styles = {
   verseP: { marginBottom: '1.25rem' },
   verseNum: { fontWeight: '900', color: '#2563eb', marginRight: '0.4rem', fontSize: '0.75em' },
   verseContent: { color: '#0f172a' },
-  readerNav: { display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '2rem' },
+  readerNav: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))', gap: '1rem', marginBottom: '2rem' },
   navBtn: { flex: 1, background: '#f8fafc', border: '2px solid #cbd5e1', color: '#334155', padding: '1rem', borderRadius: '16px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: '54px' },
   readerActions: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', borderTop: '2px solid var(--border-light)', paddingTop: '1.5rem' },
   iconBtn: { background: 'white', border: '2px solid #cbd5e1', color: '#0f172a', padding: '0.75rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', minHeight: '48px' },
   offlineSection: {},
   sectionTitle: { fontSize: '1.25rem', fontWeight: '800', color: 'white', marginBottom: '1rem' },
-  offlineCard: { padding: '1.5rem', marginBottom: '1.5rem' },
+  offlineCard: { padding: 'clamp(1rem, 4vw, 1.5rem)', marginBottom: '1.5rem' },
   offlineHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' },
   downloadBtn: { background: 'var(--primary-blue)', border: 'none', color: 'white', padding: '0.85rem 1.5rem', borderRadius: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', minHeight: '48px' },
   downloadBtnDisabled: { opacity: 0.75, cursor: 'wait' },
@@ -533,7 +576,7 @@ const styles = {
   progressText: { display: 'flex', justifyContent: 'space-between', gap: '1rem', color: '#334155', fontSize: '0.95rem', fontWeight: '800', marginBottom: '0.5rem' },
   progressTrack: { height: '12px', background: '#dbeafe', borderRadius: '999px', overflow: 'hidden' },
   progressFill: { height: '100%', background: 'var(--primary-blue)', borderRadius: '999px', transition: 'width 0.2s ease' },
-  downloadedListContainer: { background: '#f8fafc', padding: '1.5rem', borderRadius: '20px', border: '1px solid var(--border-light)' },
+  downloadedListContainer: { background: '#f8fafc', padding: 'clamp(1rem, 4vw, 1.5rem)', borderRadius: '20px', border: '1px solid var(--border-light)' },
   downloadedItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-light)', marginBottom: '0.75rem' },
   downloadedMeta: { margin: '0.15rem 0 0 0', color: '#64748b', fontSize: '0.85rem', fontWeight: '700', lineHeight: 1.3 },
   removeBtn: { background: '#fee2e2', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '0.6rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },

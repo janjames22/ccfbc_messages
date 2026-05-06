@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 
 const IDS_KEY = 'ccfbc_downloaded_ids';
 const CONTENT_KEY_PREFIX = 'ccfbc_msg_';
@@ -23,9 +23,9 @@ export const useOfflineMessages = () => {
     }
   }, [downloadedIds]);
 
-  const isDownloaded = (id) => downloadedIds.includes(id);
+  const isDownloaded = useCallback((id) => downloadedIds.includes(id), [downloadedIds]);
 
-  const saveMessageOffline = (message) => {
+  const saveMessageOffline = useCallback((message) => {
     if (typeof window === 'undefined') return false;
     if (!message || !message.id) return false;
 
@@ -57,9 +57,9 @@ export const useOfflineMessages = () => {
       console.error('Error saving message offline:', e);
       return false;
     }
-  };
+  }, [downloadedIds]);
 
-  const removeMessageOffline = (id) => {
+  const removeMessageOffline = useCallback((id) => {
     if (typeof window === 'undefined') return false;
     try {
       localStorage.removeItem(`${CONTENT_KEY_PREFIX}${id}`);
@@ -69,9 +69,9 @@ export const useOfflineMessages = () => {
       console.error('Error removing offline message:', e);
       return false;
     }
-  };
+  }, []);
 
-  const getOfflineMessage = (id) => {
+  const getOfflineMessage = useCallback((id) => {
     if (typeof window === 'undefined') return null;
     try {
       const saved = localStorage.getItem(`${CONTENT_KEY_PREFIX}${id}`);
@@ -82,7 +82,7 @@ export const useOfflineMessages = () => {
       removeMessageOffline(id);
       return null;
     }
-  };
+  }, [removeMessageOffline]);
 
   return {
     downloadedIds,

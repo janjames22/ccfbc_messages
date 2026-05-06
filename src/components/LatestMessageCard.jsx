@@ -51,7 +51,7 @@ const styles = {
     boxShadow: 'var(--shadow-lg)',
   },
   grid: {
-    padding: 'clamp(2rem, 8vw, 5rem)',
+    padding: 'clamp(1rem, 6vw, 5rem)',
   },
   content: {
     display: 'flex',
@@ -86,16 +86,17 @@ const styles = {
     letterSpacing: '1px',
   },
   title: {
-    fontSize: 'clamp(2.5rem, 8vw, var(--font-xxl))',
+    fontSize: 'clamp(1.75rem, 8vw, var(--font-xxl))',
     fontWeight: '900',
     lineHeight: '1.1',
     margin: 0,
     color: 'var(--text-dark)',
-    letterSpacing: '-0.03em',
+    letterSpacing: 0,
+    overflowWrap: 'anywhere',
   },
   meta: {
     display: 'flex',
-    gap: 'clamp(2rem, 8vw, 4rem)',
+    gap: '1rem',
     flexWrap: 'wrap',
   },
   metaItem: {
@@ -105,6 +106,7 @@ const styles = {
     fontSize: 'var(--font-sm)',
     fontWeight: '800',
     color: 'var(--text-dark)',
+    minWidth: 0,
   },
   summary: {
     fontSize: 'var(--font-base)',
@@ -117,10 +119,10 @@ const styles = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '2.5rem',
+    gap: '1.25rem',
     flexWrap: 'wrap',
     marginTop: '1.5rem',
-    paddingTop: '3rem',
+    paddingTop: '2rem',
     borderTop: '3px solid var(--border-light)',
   },
   verseBox: {
